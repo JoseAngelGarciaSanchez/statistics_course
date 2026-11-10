@@ -1,0 +1,7 @@
+# Solutions are shared with students separately, never pushed to this public repo
+labs_solutions/
+
+.DS_Store
+
+# project data generator holds the true parameters (repo is public)
+project/generate_data.py
