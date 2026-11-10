@@ -8,6 +8,7 @@ Course material for an introductory econometrics / statistics course: lecture sl
 |---|---|
 | `slides/` | Lecture slides (PDF/PPTX): introduction, linear model, tests, heteroskedasticity, endogeneity, time series, ridge & lasso, binning. Also `linear_model_schema.html`, an HTML summary page. |
 | `labs/` | Lab notebooks with exercises (questions only). Solutions are shared with students separately, after each lab. |
+| `project/` | Group projects, one folder per year. `2026-2027/`: household energy consumption and thermal renovation (French); statement `projet_2026_2027.pdf` (LaTeX source alongside) and data `donnees_energie.xlsx`. |
 
 ### Labs
 

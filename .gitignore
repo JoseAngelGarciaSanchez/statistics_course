@@ -3,5 +3,6 @@ labs_solutions/
 
 .DS_Store
 
-# project data generator holds the true parameters (repo is public)
-project/generate_data.py
+# project data generators and solutions hold the true parameters (repo is public)
+project/*/generate_data.py
+project/*/*_corrige.ipynb

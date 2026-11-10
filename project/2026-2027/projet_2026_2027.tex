@@ -1,0 +1,434 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage[french]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array,longtable}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{sorbonne}{RGB}{0,51,102}
+\definecolor{afaire}{RGB}{153,0,0}
+\definecolor{question}{RGB}{204,102,0}
+\definecolor{modele}{RGB}{240,244,248}
+
+\titleformat{\section}{\Large\bfseries\color{sorbonne}}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\color{sorbonne}}{\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Projet Économétrie}
+\fancyhead[R]{\small\color{gray}Université Paris 1 Panthéon-Sorbonne}
+\fancyfoot[C]{\thepage}
+
+\newtcolorbox{afaire}{enhanced,colback=afaire!4,colframe=afaire,fonttitle=\bfseries,title=À faire,boxrule=0.5pt,arc=2pt}
+\newtcolorbox{question}{enhanced,colback=question!5,colframe=question,fonttitle=\bfseries,title=Question,boxrule=0.5pt,arc=2pt}
+\newtcolorbox{modelbox}{colback=modele,colframe=sorbonne!60,boxrule=0.5pt,arc=2pt}
+
+\newcommand{\var}[1]{\texttt{#1}}
+\setlist{itemsep=2pt,topsep=4pt}
+\emergencystretch=3em
+
+\begin{document}
+
+% ------------------------------------------------------------------ titre
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\large\color{sorbonne}\textsc{Université Paris 1 Panthéon-Sorbonne}\par}
+\vspace{0.3cm}
+{\color{gray}UFR02 Économie\par\vspace{0.2cm}Sorbonne Data Analytics\par}
+\vspace{2.5cm}
+\rule{\linewidth}{1.5pt}\\[0.6cm]
+{\Huge\bfseries\color{sorbonne} PROJET D'ÉCONOMÉTRIE\\[0.2cm] APPLIQUÉE\par}
+\rule{\linewidth}{1.5pt}\\[1.2cm]
+{\LARGE\color{gray} Consommation d'énergie et rénovation thermique des logements\par}
+\vspace{0.5cm}
+{\large\color{gray} Du modèle linéaire à la sélection de variables\par}
+\vfill
+\begin{tabular}{>{\bfseries}l l}
+Durée estimée : & 3-4 semaines \\[0.2cm]
+Travail : & En groupes de 2-3 étudiants \\[0.2cm]
+Remise : & Rapport écrit + présentation (PPTX) + code (notebook Python)
+\end{tabular}
+\vfill
+Année universitaire 2026-2027
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ------------------------------------------------------------------ contexte
+\section*{Contexte}
+\addcontentsline{toc}{section}{Contexte}
+
+Le logement représente près d'un tiers de la consommation d'énergie finale en France. Pour la réduire, les pouvoirs publics subventionnent la rénovation thermique (isolation, changement de chauffage) et interdisent progressivement la mise en location des « passoires thermiques ». À l'automne 2022, face à la crise énergétique, un plan de sobriété a en outre appelé les ménages à baisser leur chauffage.
+
+Vous êtes chargés d'évaluer, pour une agence publique, \textbf{ce qui détermine la consommation d'énergie des ménages} et \textbf{ce que rapporte réellement une rénovation}. Les données sont simulées à partir d'ordres de grandeur réalistes.
+
+\paragraph{Une expérimentation.} Dans les communes de l'échantillon, 25\,\% des ménages, \textbf{tirés au sort}, ont reçu il y a cinq ans un chèque de 4\,000\,€ utilisable pour des travaux de rénovation énergétique.
+
+\paragraph{Dataset :} \var{donnees\_energie.xlsx}, qui contient deux feuilles.
+
+\subsection*{Feuille \var{Logements} : 2\,000 résidences principales (enquête 2025)}
+
+{\small
+\begin{longtable}{>{\ttfamily}l p{0.56\linewidth}}
+\toprule
+\normalfont\bfseries Variable & \bfseries Description \\
+\midrule
+\endhead
+ID & Identifiant du logement \\
+Conso\_kWh & Consommation annuelle d'énergie finale, toutes énergies (kWh/an) \textit{(variable dépendante)} \\
+Surface\_m2 & Surface habitable (m²) \\
+Nb\_occupants & Nombre de personnes dans le ménage \\
+Maison & 1 = maison individuelle, 0 = appartement \\
+Annee\_construction & Année de construction du bâtiment \\
+Chauffage & Mode de chauffage principal : \textit{Electrique}, \textit{Gaz}, \textit{Fioul}, \textit{Bois}, \textit{PAC} (pompe à chaleur) \\
+DJU & Degrés-jours unifiés de chauffage de la commune (rigueur du climat ; plus c'est élevé, plus il fait froid) \\
+Revenu\_kEUR & Revenu annuel du ménage (milliers d'€) \\
+Proprietaire & 1 = le ménage est propriétaire, 0 = locataire \\
+Age\_referent & Âge de la personne de référence du ménage \\
+Teletravail\_jours & Nombre de jours de télétravail par semaine (0 à 5) \\
+\midrule
+\multicolumn{2}{l}{\normalfont\textit{Équipements (1 = oui, 0 = non, sauf \texttt{Nb\_ecrans})}} \\
+Piscine, Voiture\_electrique, & Piscine ; voiture électrique rechargée au domicile ; \\
+Climatisation, Seche\_linge, & climatisation ; sèche-linge ; \\
+Congelateur, Ballon\_electrique, & congélateur indépendant ; chauffe-eau électrique ; \\
+Panneaux\_solaires, & panneaux photovoltaïques ; \\
+Thermostat\_connecte, & thermostat programmable connecté ; \\
+Lave\_vaisselle, Nb\_ecrans, & lave-vaisselle ; nombre d'écrans (TV, ordinateurs) ; \\
+Animal\_compagnie, Jardin, & animal de compagnie ; jardin ; \\
+Velo, Abonnement\_streaming & vélo ; abonnement à une plateforme de streaming \\
+\midrule
+Renovation & 1 = travaux de rénovation énergétique réalisés au cours des 5 dernières années \\
+Cheque\_renovation & 1 = le ménage a été tiré au sort pour recevoir le chèque de 4\,000\,€ \\
+Artisans\_RGE & Nombre d'artisans certifiés « Reconnu Garant de l'Environnement » dans la commune, pour 10\,000 habitants \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection*{Feuille \var{Conso\_mensuelle} : série nationale, janvier 2012 -- décembre 2025}
+
+{\small
+\begin{tabular}{>{\ttfamily}l p{0.56\linewidth}}
+\toprule
+\normalfont\bfseries Variable & \bfseries Description \\
+\midrule
+Mois & Mois (AAAA-MM) \\
+Conso\_TWh & Consommation d'électricité du secteur résidentiel en France (TWh) \\
+DJU & Degrés-jours unifiés de chauffage du mois (moyenne nationale) \\
+\bottomrule
+\end{tabular}
+}
+
+\begin{afaire}
+Les données brutes d'une enquête ne sont jamais propres. Avant toute estimation, repérez les \textbf{erreurs de saisie et les codes de non-réponse}, décidez comment les traiter et justifiez votre choix dans le rapport.
+\end{afaire}
+
+\newpage
+% ------------------------------------------------------------------ 1
+\section{Préparation des données et statistiques descriptives}
+
+\subsection{Nettoyage}
+\begin{itemize}
+  \item Repérez les valeurs impossibles ou aberrantes (minimum, maximum, histogrammes). Pour chacune, proposez une explication et un traitement (correction ou suppression).
+  \item Indiquez le nombre d'observations conservées.
+\end{itemize}
+
+\subsection{Statistiques descriptives}
+Présentez un tableau récapitulatif des variables quantitatives : moyenne ($\bar X$), médiane, écart-type ($s_X$), minimum, maximum, quartiles. Donnez l'asymétrie (\textit{skewness}) et l'aplatissement (\textit{kurtosis}) de \var{Conso\_kWh} et de $\log(\var{Conso\_kWh})$.
+
+\begin{afaire}
+Tracez les histogrammes de \var{Conso\_kWh} et de son logarithme, ainsi que des boîtes à moustaches de la consommation selon le mode de chauffage et selon le type de logement. Quelles variables pourraient nécessiter une transformation logarithmique ?
+\end{afaire}
+
+\subsection{Corrélations et une première comparaison}
+\begin{itemize}
+  \item Calculez la matrice de corrélation des variables continues et représentez-la (heatmap).
+  \item Comparez la consommation moyenne des logements rénovés et non rénovés. Testez si la différence est significative.
+\end{itemize}
+
+\begin{question}
+Les logements rénovés consomment-ils moins ? Peut-on en conclure que la rénovation est inefficace ? Proposez au moins deux explications. Vous y reviendrez dans la partie~\ref{sec:endo}.
+\end{question}
+
+% ------------------------------------------------------------------ 2
+\section{Le modèle linéaire : estimation et interprétation}
+
+\subsection{Modèle de régression linéaire simple}
+\begin{modelbox}
+\begin{equation}
+\text{Conso}_i = \beta_0 + \beta_1\,\text{Surface}_i + u_i
+\end{equation}
+\end{modelbox}
+Estimez le modèle par MCO et présentez $\hat\beta_0$, $\hat\beta_1$, leurs écarts-types, les statistiques $t$, les $p$-valeurs, le $R^2$ et le $\bar R^2$.
+
+\begin{question}
+Interprétez $\hat\beta_1$ : combien de kWh consomme en moyenne un m² supplémentaire ? Le coefficient $\hat\beta_0$ a-t-il un sens économique ?
+\end{question}
+
+\subsection{Modèle de régression linéaire multiple}
+\begin{modelbox}
+\begin{equation}
+\begin{aligned}
+\text{Conso}_i = \beta_0 &+ \beta_1\,\text{Surface}_i + \beta_2\,\text{Nb\_occupants}_i + \beta_3\,\text{Maison}_i + \beta_4\,\text{Annee\_construction}_i \\
+&+ \beta_5\,\text{DJU}_i + \beta_6\,\text{Revenu}_i + \textstyle\sum_k \gamma_k\,\mathbf{1}\{\text{Chauffage}_i = k\} + u_i
+\end{aligned}
+\end{equation}
+\end{modelbox}
+\begin{enumerate}
+  \item Tous les coefficients sont-ils significatifs ? Donnez l'impact marginal de chaque variable.
+  \item \var{Chauffage} a cinq modalités. Combien d'indicatrices faut-il introduire et pourquoi ? Que se passe-t-il si on les introduit toutes avec la constante ? Prenez \textit{Electrique} comme référence et interprétez $\hat\gamma_{\text{PAC}}$.
+  \item Interprétez le coefficient de \var{Maison}.
+  \item Comment interprétez-vous la différence entre $R^2$ et $\bar R^2$ ?
+\end{enumerate}
+
+\subsection{Transformations logarithmiques}
+Estimez le modèle en semi-log ($\log \text{Conso}$ en fonction des variables en niveau) puis en log-log (logarithme de \var{Conso\_kWh}, \var{Surface\_m2}, \var{DJU} et \var{Revenu\_kEUR}).
+\begin{enumerate}
+  \item Interprétez les coefficients de la surface, des DJU et du revenu dans le modèle log-log. Une élasticité de la consommation à la surface inférieure à 1 vous paraît-elle plausible ?
+  \item Interprétez le coefficient de \var{Maison} dans le modèle semi-log (en \%).
+  \item Peut-on comparer directement le $R^2$ d'un modèle en niveau et celui d'un modèle en logarithme ? Quel modèle retenez-vous et pourquoi ?
+\end{enumerate}
+
+\subsection{Une variable continue ou des indicatrices ?}
+La première réglementation thermique date de 1974 et elle a été renforcée en 2000 et en 2012. Créez une variable catégorielle de période de construction (avant 1948, 1948-1974, 1975-2000, 2001-2012, après 2012) et remplacez \var{Annee\_construction} par ses indicatrices.
+
+\begin{question}
+L'effet de l'année de construction est-il linéaire ? Quelle spécification préférez-vous ? Justifiez avec un critère statistique.
+\end{question}
+
+% ------------------------------------------------------------------ 3
+\section{Diagnostics du modèle}
+
+\subsection{Multicolinéarité}
+\begin{itemize}
+  \item Ajoutez au modèle log-log les variables d'équipement et calculez les VIF.
+  \item Retirez \var{Nb\_occupants} du modèle : comment évolue le coefficient de la surface ? Expliquez ce changement avec la formule du biais de variable omise.
+\end{itemize}
+
+\begin{question}
+Y a-t-il des variables avec un VIF élevé ? Faut-il en supprimer ? Quelle est la différence entre une multicolinéarité forte et une multicolinéarité parfaite ?
+\end{question}
+
+\subsection{Observations influentes}
+Calculez le levier et la distance de Cook de chaque observation dans le modèle en niveau.
+
+\begin{afaire}
+Réestimez le modèle en niveau sur les données \textbf{non nettoyées} (avant la section~1.1). Comment les erreurs de saisie modifient-elles les coefficients ? Le modèle en logarithme y est-il plus ou moins sensible ?
+\end{afaire}
+
+% ------------------------------------------------------------------ 4
+\section{Tests et inférence}
+Travaillez avec votre modèle log-log de la section~2.
+\begin{enumerate}
+  \item Testez l'hypothèse que la consommation est proportionnelle à la surface (élasticité égale à 1).
+  \item Testez l'hypothèse que le télétravail \textbf{augmente} la consommation. Quelle est la $p$-valeur du test unilatéral ?
+  \item Testez la significativité globale du modèle. Testez ensuite si les variables d'équipement, prises ensemble, améliorent significativement le modèle.
+  \item Le chauffage au gaz et le chauffage au fioul ont-ils le même effet sur la consommation ?
+  \item Pourquoi ne peut-on pas simplement utiliser plusieurs tests $t$ pour tester plusieurs restrictions simultanément ?
+\end{enumerate}
+
+\subsection{Stabilité structurelle : maisons et appartements}
+Testez si les déterminants de la consommation sont les mêmes pour les maisons et les appartements (test de Chow).
+
+\begin{afaire}
+Si vous trouvez une rupture, identifiez les coefficients qui diffèrent à l'aide d'un modèle avec interactions. Donnez une explication physique ou économique. Faut-il estimer des modèles séparés ?
+\end{afaire}
+
+% ------------------------------------------------------------------ 5
+\section{Hétéroscédasticité et autocorrélation}
+
+\subsection{Hétéroscédasticité}
+\begin{enumerate}
+  \item Représentez les résidus du modèle en niveau et du modèle log-log en fonction des valeurs ajustées, puis selon le type de logement et la période de construction. Observez-vous un motif ?
+  \item Réalisez les tests de Breusch-Pagan et de White sur les deux modèles. Le passage au logarithme règle-t-il le problème ?
+  \item Corrigez l'hétéroscédasticité. Comparez les MCO standard, les MCO avec écarts-types robustes et les MCG réalisables (WLS). Quelles conclusions changent ?
+\end{enumerate}
+
+\subsection{Autocorrélation : la série mensuelle}
+
+\begin{question}
+Pourquoi n'a-t-il pas de sens de tester l'autocorrélation des résidus sur la feuille \var{Logements} ? \textit{Indice :} mélangez l'ordre des lignes et recalculez la statistique de Durbin-Watson.
+\end{question}
+
+Utilisez désormais la feuille \var{Conso\_mensuelle}.
+\begin{enumerate}
+  \item Représentez \var{Conso\_TWh} et \var{DJU} au cours du temps. Estimez $\text{Conso}_t = \alpha + \beta\,\text{DJU}_t + \varepsilon_t$ et interprétez $\hat\beta$.
+  \item Représentez les résidus au cours du temps. Testez l'autocorrélation (Durbin-Watson, Breusch-Godfrey).
+  \item Corrigez : écarts-types de Newey-West, puis estimation par quasi-différences (Cochrane-Orcutt). Comparez.
+\end{enumerate}
+
+\begin{afaire}
+\textbf{Le plan de sobriété.} Testez si la relation entre consommation et DJU a changé à partir d'octobre 2022 (constante \textbf{et} pente). Pourquoi le test de Chow classique n'est-il pas valide ici ? Refaites le test avec des écarts-types de Newey-West. Combien de TWh par an la sobriété a-t-elle permis d'économiser, pour une année de climat moyen ?
+\end{afaire}
+
+% ------------------------------------------------------------------ 6
+\section{Endogénéité et variables instrumentales}\label{sec:endo}
+
+\subsection{Sources d'endogénéité}
+Ajoutez \var{Renovation} à votre modèle en logarithme (avec les équipements).
+
+\begin{question}
+Le coefficient MCO de \var{Renovation} mesure-t-il l'effet causal de la rénovation ? Discutez les sources d'endogénéité (variables omises, causalité inverse, erreur de mesure). Dans quel sens le biais va-t-il probablement ? Faites le lien avec la section~1.3.
+\end{question}
+
+\subsection{Un instrument issu d'un tirage au sort}
+\begin{enumerate}
+  \item Expliquez pourquoi \var{Cheque\_renovation} est un bon candidat d'instrument pour \var{Renovation} : pertinence, exogénéité, restriction d'exclusion. Le chèque pourrait-il influencer la consommation autrement que par la rénovation ?
+  \item Estimez la première étape. L'instrument est-il faible ?
+  \item Construisez l'estimation en deux étapes (2SLS) « à la main », puis avec une fonction dédiée. Pourquoi les écarts-types de la deuxième régression MCO sont-ils faux ?
+  \item Comparez les coefficients MCO et VI. Traduisez l'effet de la rénovation en pourcentage d'économie d'énergie.
+  \item Testez l'endogénéité de \var{Renovation} (test de Hausman).
+\end{enumerate}
+
+\subsection{Un second instrument}
+Un collègue propose d'utiliser aussi \var{Artisans\_RGE} : là où les artisans certifiés sont nombreux, il est plus facile de faire des travaux.
+\begin{enumerate}
+  \item Estimez le modèle VI avec \var{Artisans\_RGE} seul, puis avec les deux instruments.
+  \item Testez la validité des restrictions de suridentification (test de Sargan).
+  \item Quel instrument vous semble suspect ? Où les artisans choisissent-ils de s'installer ? Concluez.
+\end{enumerate}
+
+% ------------------------------------------------------------------ 7
+\section{Choix binaire : qui rénove ?}
+
+Expliquez \var{Renovation} par \var{Proprietaire}, $\log(\var{Revenu\_kEUR})$, \var{Age\_referent}, \var{Maison}, $\log(\var{Surface\_m2})$, une indicatrice de construction avant 1975 et \var{Cheque\_renovation}.
+\begin{enumerate}
+  \item Estimez un modèle de probabilité linéaire (MPL) avec des écarts-types robustes. Pourquoi le MPL est-il hétéroscédastique par construction ? Combien de probabilités prédites sortent de $[0,1]$ ?
+  \item Estimez un logit et un probit. Comparez les coefficients (rapport logit / probit) et les probabilités prédites.
+  \item Calculez les effets marginaux moyens et les effets marginaux au point moyen. Interprétez l'effet d'être propriétaire.
+  \item Évaluez la qualité de l'ajustement : pseudo-$R^2$, taux de bonnes prédictions, courbe ROC et AUC. Testez la significativité jointe de l'âge et du revenu (test du rapport de vraisemblance).
+\end{enumerate}
+
+\begin{question}
+Les locataires rénovent beaucoup moins que les propriétaires. Pourquoi ? (Qui paie les travaux, qui paie la facture d'énergie ?) Quelle politique publique cela suggère-t-il ?
+\end{question}
+
+% ------------------------------------------------------------------ 8
+\section{Régularisation}
+
+\begin{afaire}
+\textbf{Important :} avant d'appliquer Ridge ou Lasso, standardisez toutes les variables explicatives (moyenne 0, écart-type 1), car la pénalité dépend de l'échelle des coefficients. Variable dépendante : $\log(\var{Conso\_kWh})$. Variables explicatives : toutes les variables de la feuille \var{Logements} (sauf \var{ID} et les deux instruments), avec les indicatrices de chauffage et de période de construction.
+\end{afaire}
+
+\begin{enumerate}
+  \item Estimez un modèle Ridge pour une grille de valeurs de $\lambda$. Représentez et commentez l'évolution des coefficients.
+  \item Estimez un modèle Lasso pour une grille de valeurs de $\lambda$. Dans quel ordre les variables sont-elles éliminées quand $\lambda$ augmente ?
+  \item Choisissez $\lambda$ par validation croisée 10-fold. Comparez le $\lambda$ qui minimise l'erreur de validation et le plus grand $\lambda$ à moins d'un écart-type de ce minimum (règle « 1-SE »). Quelles variables chaque choix élimine-t-il ?
+  \item Divisez l'échantillon en apprentissage et test (80\,\% - 20\,\%) et comparez la RMSE de test des MCO, de Ridge et de Lasso.
+  \item \textbf{Petit échantillon.} Recommencez avec seulement 150 observations d'apprentissage et toutes les interactions d'ordre 2 des variables explicatives, obtenues avec \texttt{PolynomialFeatures(degree=2)}. Comparez à nouveau les RMSE de test. Pourquoi la régularisation change-t-elle si peu de chose dans la question précédente et autant ici ?
+\end{enumerate}
+
+\begin{question}
+\textbf{Discussion :} avec la règle 1-SE, le Lasso élimine-t-il \var{Renovation} ? Peut-on en conclure que la rénovation n'économise pas d'énergie ? Faites le lien avec la partie~\ref{sec:endo}. Pourquoi les écarts-types et tests classiques ne sont-ils pas valides après Lasso ?
+\end{question}
+
+% ------------------------------------------------------------------ 9
+\section{Prévisions et recommandation}
+
+\subsection{Prédiction ponctuelle et intervalles}
+Un ménage envisage des travaux. Son logement :
+\begin{center}
+\small
+\begin{tabular}{ll@{\hspace{1.5cm}}ll}
+Maison & oui & Chauffage & Gaz \\
+Surface & 110 m² & DJU & 2\,600 \\
+Occupants & 4 & Revenu & 48 k€ \\
+Construction & 1968 & Propriétaire & oui \\
+Âge du référent & 45 ans & Télétravail & 2 jours \\
+Rénovation & non & Chèque & non \\
+\end{tabular}
+\end{center}
+Équipements : voiture électrique, sèche-linge, congélateur, lave-vaisselle, 4 écrans, animal, jardin, vélo, abonnement streaming (pas de piscine, climatisation, chauffe-eau électrique, panneaux solaires ni thermostat connecté). \var{Artisans\_RGE} = 8.
+
+\begin{enumerate}
+  \item Calculez la prédiction ponctuelle de sa consommation avec votre meilleur modèle en logarithme. Pourquoi $\exp(\widehat{\log \text{Conso}})$ sous-estime-t-il la consommation moyenne ? Corrigez (facteur $e^{\hat\sigma^2/2}$ ou estimateur de Duan).
+  \item Calculez l'intervalle de confiance à 95\,\% de la consommation \textbf{moyenne} de ce type de logement, puis l'intervalle de prévision à 95\,\% pour \textbf{ce} logement. Pourquoi diffèrent-ils autant ?
+  \item Quelle est la probabilité que ce ménage rénove (probit) ? Et s'il était locataire ?
+\end{enumerate}
+
+\subsection{Les travaux sont-ils rentables ?}
+Les travaux envisagés coûtent 25\,000\,€ et le prix moyen de l'énergie est de 0,15\,€/kWh.
+\begin{enumerate}
+  \item Calculez l'économie annuelle (en kWh et en €) avec le coefficient MCO, puis avec le coefficient VI de la partie~\ref{sec:endo}. En combien d'années les travaux sont-ils remboursés dans chaque cas ?
+  \item Quelle aide publique rendrait les travaux rentables en 15 ans ?
+\end{enumerate}
+
+\begin{question}
+Quelle estimation recommanderiez-vous à l'agence pour calibrer ses aides, et pourquoi ? Quelles sont les limites de votre prévision ?
+\end{question}
+
+% ------------------------------------------------------------------ rapport
+\newpage
+\section*{Rapport à remettre}
+\addcontentsline{toc}{section}{Rapport à remettre}
+
+\subsection*{Structure obligatoire}
+\begin{enumerate}
+  \item \textbf{Page de titre} (nom du groupe, date, titre)
+  \item \textbf{Résumé exécutif} (1 page max)
+    \begin{itemize}
+      \item Principaux résultats
+      \item Recommandations à l'agence
+    \end{itemize}
+  \item \textbf{Introduction} (1-2 pages)
+    \begin{itemize}
+      \item Contexte et problématique
+      \item Structure du rapport
+    \end{itemize}
+  \item \textbf{Partie 1 : Données et modèle de base} (5-7 pages)
+    \begin{itemize}
+      \item Nettoyage et statistiques descriptives
+      \item Modèle linéaire simple et multiple, transformations
+      \item Tests de significativité
+    \end{itemize}
+  \item \textbf{Partie 2 : Diagnostics et corrections} (6-8 pages)
+    \begin{itemize}
+      \item Multicolinéarité et observations influentes
+      \item Hétéroscédasticité et corrections
+      \item Tests de Chow (maisons / appartements, sobriété 2022) et autocorrélation
+    \end{itemize}
+  \item \textbf{Partie 3 : L'effet causal de la rénovation} (4-6 pages)
+    \begin{itemize}
+      \item Sources d'endogénéité
+      \item Estimation VI et tests (instruments faibles, Hausman, Sargan)
+    \end{itemize}
+  \item \textbf{Partie 4 : Qui rénove ?} (3-5 pages)
+    \begin{itemize}
+      \item MPL, logit, probit et effets marginaux
+      \item Qualité de l'ajustement et dilemme propriétaire-locataire
+    \end{itemize}
+  \item \textbf{Partie 5 : Régularisation et prévision} (4-6 pages)
+    \begin{itemize}
+      \item Ridge et Lasso, comparaison des performances prédictives
+      \item Prévision et rentabilité des travaux
+    \end{itemize}
+  \item \textbf{Conclusion et recommandations} (2-3 pages)
+    \begin{itemize}
+      \item Synthèse des résultats
+      \item Limites de l'analyse
+      \item Recommandations de politique publique
+    \end{itemize}
+  \item \textbf{Annexes}
+    \begin{itemize}
+      \item Tableaux complets
+      \item Code (notebook Python exécutable)
+      \item Graphiques supplémentaires
+    \end{itemize}
+\end{enumerate}
+
+\end{document}
