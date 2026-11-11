@@ -1,0 +1,319 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+% Title page information
+\title{Econometrics Part 2}
+\subtitle{The linear model in practice}
+\author{Jose Angel Garcia Sanchez}
+\institute{Sorbonne Data Analytics}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+
+% Set the logo
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Section 1: Multicollinearity
+\section{Multicollinearity}
+
+\begin{frame}{Multicollinearity}
+\begin{itemize}
+    \item This problem arises if some variable is equal to an exact linear combination of some other variables (e.g.\ if we have variables like \textit{income}, \textit{income after tax} and \textit{tax})
+    \item This variable is unnecessary because it contains redundant information
+    \item Worse, it prevents the computation of the OLS estimator, since $X$ is no longer full rank and we cannot compute $\hat{b} = (X'X)^{-1}X'y$
+    \item Some software (e.g.\ Stata) detects it and arbitrarily removes one redundant variable
+    \item statsmodels does \textbf{not}: it uses a pseudo-inverse and only prints a warning in the summary (``the design matrix is singular''), so always read it
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Near multicollinearity}
+\begin{itemize}
+    \item This problem arises if some variable is \textit{almost} equal to an exact linear combination of some other variables
+    \item In other words, it means that they are very strongly correlated
+    \item We \textit{can} compute $\hat{b} = (X'X)^{-1}X'y$
+    \item But: $\hat{b}$ is very unstable and the estimator is not very reliable (large variance)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{How to detect near multicollinearity (1)}
+\begin{itemize}
+    \item The VIF (Variance Inflation Factor) indicates by how much the variance of a parameter $\hat{b}_j$ is inflated due to the correlation of variable $X_j$ with all the other explanatory variables
+    \item Say our model has $k$ parameters: constant, $X_1$, $X_2$, \dots, $X_{k-1}$
+    \item We run the regression of each $X_j$ on all the other explanatory variables, and save its $R^2$, called $R_j^2$
+    \item Example: $X_1 = a_1 + a_2X_2 + \dots + a_{k-1}X_{k-1} + \varepsilon$
+    \item Next, the VIF of each variable $j$ is computed as:
+    \[
+    \text{VIF}_j = \frac{1}{1-R_j^2}
+    \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{How to detect near multicollinearity (2)}
+\begin{itemize}
+    \item One can prove that in the original regression $y = b_0 + b_1X_1 + \dots + b_{k-1}X_{k-1} + u$:
+    \[
+    V(\hat{b}_j) = \frac{\sigma^2}{(N-1)\,\widehat{Var}(X_j)} \, \text{VIF}_j
+    \]
+    \item $\text{VIF}_j > 5$ (some use 10) indicates a high risk of multicollinearity between variable $j$ and the other variables
+    \item Python: \texttt{from statsmodels.stats.outliers\_influence import variance\_inflation\_factor}, then \texttt{variance\_inflation\_factor(X.values, j)}
+    \item Careful: $X$ must contain the constant column (\texttt{sm.add\_constant}), otherwise the VIFs are wrong
+    \item If you don't see any big issue, do not remove variables: risk of omitted variable bias (see below)
+\end{itemize}
+\end{frame}
+
+% Section 2: Handling categories
+\section{Handling categories}
+
+\begin{frame}{Dummy variables: 2 categories}
+\begin{itemize}
+    \item Let's say we have $N$ individual observations providing income, gender and the number of years of education
+    \item We want to explain individual income $y$ by education $x$ and gender $z$: $y_i = a + b x_i + c z_i + u_i$
+    \item $z$ is a \textit{categorical variable}, ideally coded with 0/1
+    \item Say $z = 1$ codes for males
+    \item $c$ is the average income difference between males and females with the same level of education
+    \item It would be irrelevant to have both a male \textit{and} a female dummy: since male + female = 1 = the constant, it would cause \textit{exact multicollinearity} (the ``dummy variable trap'')
+    \item Remark: having a categorical variable as the dependent variable requires other models, such as Probit and Logit (see later chapters)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Dummy variables: more than 2 categories}
+\begin{itemize}
+    \item We want to explain life satisfaction $y$ by income $x$ and type of environment $z$: \textit{big city}, \textit{small city} or \textit{rural} (coded 1, 2 and 3)
+    \item $z$ is still a \textit{categorical variable}, but with 3 categories: we choose a reference category, with respect to which parameters are computed, say \textit{rural}
+    \item Model: $y_i = a + b x_i + c_1 z_{1i} + c_2 z_{2i} + u_i$, where $z_1$ and $z_2$ are dummies for \textit{big city} and \textit{small city}
+    \item Do not keep the original coding (1, 2, 3), which would be meaningless in a regression
+    \item pandas: \texttt{pd.get\_dummies(df["environment"], dtype=int)}, then drop the \textit{rural} column (\texttt{drop\_first=True} would drop \textit{big city}, the first category)
+    \item statsmodels formula: \texttt{C(environment, Treatment(reference=3))}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Dummy variables: outliers}
+\begin{itemize}
+    \item Let's say we have $N$ yearly observations for a country that experienced a shock
+    \item We want to explain life expectancy $y$ by the number of doctors per capita $x$: $y_t = a + b x_t + u_t$
+    \item Let's say that the shock took place in year $t_0$: this unusual observation is likely to bias the whole regression, but we don't want to delete it
+    \item We will take this event into account with a dummy variable:
+    \item $D_t = 1$ if $t = t_0$, $D_t = 0$ otherwise
+    \item The model is now written: $y_t = a + b x_t + c D_t + u_t$
+    \item $c$ represents the impact of the shock
+    \item Note: the residual of year $t_0$ becomes 0, so $a$ and $b$ are estimated as if year $t_0$ were dropped
+\end{itemize}
+\end{frame}
+
+% Section 3: Omitted variables
+\section{Omitted variables}
+
+\begin{frame}{Omitted variable bias}
+\begin{itemize}
+    \item Estimating the previous model with and without dummy $D$ can lead to changes even in parameters $a$ and $b$
+    \item Omitting a relevant variable (here $D$) that is correlated with the included variables leads to \textit{omitted variable bias}, which affects all estimated parameters
+    \item Proof: in the finite sample case with the Frisch-Waugh theorem (see Dormont), and proof involving consistency in later chapters (on endogeneity)
+    \item This is a very important issue in applied work, so try not to forget important variables in models
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Frisch-Waugh theorem}
+\begin{itemize}
+    \item Let $Z$ be a matrix of variables
+    \item $M_Z = I - Z(Z'Z)^{-1}Z'$ is the orthogonal projection matrix on $L^{\perp}(Z)$
+    \item Let's define 2 models:
+    \begin{enumerate}
+        \item $y = Xb_{(i)} + Zc + u$
+        \item $M_Zy = M_ZXb_{(ii)} + M_Zu$
+    \end{enumerate}
+    \item The Frisch-Waugh theorem states that $\hat{b}_{(i)} = \hat{b}_{(ii)}$
+    \item Important consequence: estimating the model with both sets of variables $X$ and $Z$ \textbf{or} with $X$ alone will in general not provide the same results
+    \item This is called the ``omitted variable bias''
+\end{itemize}
+
+\textit{Under which condition will the results be the same?}
+\end{frame}
+
+\begin{frame}{Answer}
+\begin{itemize}
+    \item Estimating the model with both sets of variables $X$ and $Z$ \textbf{or} with $X$ alone will yield the same results only if $X$ and $Z$ are orthogonal
+    \item i.e.\ $X'Z = 0$ (for centered variables: $X$ and $Z$ are totally uncorrelated)
+    \item This rarely happens with observational data (it is the idea behind randomized experiments)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{A side effect of the FW theorem: centered variables}
+\begin{itemize}
+    \item Estimating the simple model $y_i = a + b x_i + u_i$ with or without centering observations (i.e.\ replacing each value $y_i$ by $y_i - \bar{y}$, same for $x$) will give the same result for $\hat{b}$
+    \item Why: apply the FW theorem with $Z$ = the constant, since $M_Z$ simply centers the variables
+    \item Centering observations will make the constant unnecessary
+\end{itemize}
+\end{frame}
+
+% Section 4: Predictions in logs
+\section{Predictions in logs}
+
+\begin{frame}{Advantages of using logs}
+\begin{enumerate}
+    \item Taking the \textit{log} of the dependent variable can make the residuals look more ``normal''
+    \item It can also reduce heteroskedasticity
+    \item Parameters can be interpreted as percentages (semi-elasticities) or, if $x$ is also in logs, as elasticities
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{About the log transformation}
+\begin{itemize}
+    \item The average predicted $y$ should be equal to the average observed $y$
+    \item Here, we can compute a prediction of $\log(y)$
+    \item Can we get back to the predicted $y$ (in levels) simply by taking the exponential of the predicted $\log(y)$?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Log and predictions (1)}
+\begin{itemize}
+    \item Let's use model $\forall i$, $\log(y_i) = a + bx_i + u_i$ (what matters is that we take the \textit{log} of $y$)
+    \item Taking the exponential:\\
+    $y_i = \exp(a + bx_i + u_i) = \exp(a + bx_i)\exp(u_i)$
+    \item So if the $u$'s are independent from the $x$'s, we get:\\
+    $E[y_i] = E[\exp(a + bx_i)\exp(u_i)] = E[\exp(a + bx_i)]\,E[\exp(u_i)]$
+    \item We usually consider the $x$'s as fixed, so:\\
+    $E[y_i] = \exp(a + bx_i)\,E[\exp(u_i)]$
+    \item By Jensen's inequality, $E[\exp(u_i)] > \exp(E[u_i]) = 1$: simply taking the exponential underestimates $y$
+    \item A prediction for $y$ is thus: $\hat{y}_i = \exp(\hat{a} + \hat{b}x_i)\,\hat{E}[\exp(u_i)]$
+    \item But how to estimate $E[\exp(u_i)]$ (the retransformation parameter)?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Log and predictions (2)}
+It can be proven that if $u \hookrightarrow N(0,\sigma^2)$, then $E[\exp(u_i)] = \exp(\frac{\sigma^2}{2})$. This can be estimated using:
+\[
+\hat{\Psi} = \exp\left(\frac{\hat{\sigma}^2}{2}\right)
+\qquad \text{so that} \qquad
+\hat{y}_i = \exp(\hat{a} + \hat{b}x_i)\,\hat{\Psi}
+\]
+
+To get back to levels when using a prediction in \textit{logs}, we cannot simply take the exponential of the prediction: there is an additional retransformation parameter to take into account.
+
+The preceding formula holds only if the $u$'s are normal: if their distribution is unknown but homoskedastic (same variance), we can use Duan's non-parametric\footnote{Because it makes no assumption on the type of distribution} \textit{smearing} estimator:
+\[
+\hat{\Psi} = \frac{1}{N}\sum_{i=1}^{N} \exp(\hat{u}_i)
+\]
+\end{frame}
+
+% Section 5: Influential observations
+\section{Influential observations}
+
+\begin{frame}{Are all observations given the same weight?}
+We have:
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2}\]
+
+So:
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})^2 \frac{(y_i-\bar{y})}{(x_i-\bar{x})}}{\sum(x_i - \bar{x})^2} = \sum p_i\frac{(y_i - \bar{y})}{(x_i - \bar{x})}\]
+
+Calling $p_i = \frac{(x_i - \bar{x})^2}{\sum(x_i - \bar{x})^2}$.
+
+$\frac{(y_i-\bar{y})}{(x_i-\bar{x})}$ is the slope of the line drawn from the point corresponding to individual $i$ to the sample average, and $p_i$ is an increasing function of $|x_i - \bar{x}|$.
+
+Estimate $\hat{b}_1$ is thus highly influenced by points with extreme $x$ values (see Anscombe's quartet: four datasets with the same regression line).
+\end{frame}
+
+\begin{frame}{Outliers (1)}
+\begin{itemize}
+    \item Outlier: observation with a large residual compared to other observations
+    \item They may indicate a poor goodness of fit
+    \item How to detect them: using a residuals plot
+    \item Goal: estimate how far the observed value is from the predicted value
+    \item Or more rigorously: using the \textit{studentized} residuals, which adjust for the \textit{leverage} of that particular point
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Outliers (2)}
+\begin{itemize}
+    \item Outliers are observations that have a large residual
+    \item However, if the observation has a high leverage, it has pulled the predicted value towards itself
+    \item In other words, the variances of the residuals differ, even though the variances of the true errors are all equal to each other
+    \item Consequence: need for studentization
+    \item The \textit{studentized} residuals adjust for the leverage of that particular point (see what $h$ is below)
+\end{itemize}
+
+\[rstud_i = \frac{\hat{u}_i}{\hat{\sigma}\sqrt{1 - h_i}}\]
+
+This is the \textit{internally} studentized residual; the \textit{externally} studentized one uses $\hat{\sigma}_{(-i)}$, estimated without observation $i$.
+\end{frame}
+
+\begin{frame}{Leverage (1)}
+\begin{itemize}
+    \item High leverage observation: has an explanatory variable that takes a value very different from the sample mean
+    \item In a simple regression model, it could be (for example) at the far right and would influence the slope of the regression line
+    \item How to detect them: the ``hat statistic''
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Leverage (2)}
+\begin{itemize}
+    \item We know that $\hat{y} = P_Xy$
+    \item $P_X$ can be called the ``hat'' matrix (it puts a hat on $y$)
+    \item Let's call $h_i$ the $i^{th}$ element of the diagonal of the hat matrix
+    \item $h_i$ is the \textit{leverage} of observation $i$: if it is large, then observation $i$ has a high leverage
+    \item $0 \leq h_i \leq 1$ (and $h_i \geq 1/N$ when the model has a constant)
+    \item $\sum_i h_i = k$, so the average leverage is $\bar{h} = k/N$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Leverage (3)}
+\begin{itemize}
+    \item We know that $\hat{u} = (I - P_X)u$, so $V(\hat{u}) = \sigma^2(I - P_X)$
+    \item So: $V(\hat{u}_i) = \sigma^2(1 - h_i)$
+    \item The greater the leverage $h_i$, the smaller the variance of the residual for observation $i$
+    \item Meaning: high leverage observations tend to bring the regression line close to them
+    \item High leverage observations are not necessarily influential, but low leverage observations are rarely very influential
+    \item For the simple linear model: $h_i = \frac{1}{N} + \frac{(x_i-\bar{x})^2}{\sum(x_i-\bar{x})^2}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Influence measures (1)}
+\begin{itemize}
+    \item Influential observation: if removed from the regression, estimated parameters vary a lot
+    \item How to detect them: the \textit{Dfbeta} statistic
+    \item For every variable $k$, its \textit{Dfbeta} measures how much its coefficient would change if we removed one observation
+    \item It is computed for every observation $i$ and every coefficient $k$ (an $N \times k$ table)
+    \item The change in $\hat{b}_k$ if observation $i$ is dropped is:
+\end{itemize}
+
+\[\text{Dfbeta}_{i,k} = \frac{\hat{b}_k - \hat{b}_{k,(-i)}}{\hat{\sigma}_{k,(-i)}}\]
+
+with $\hat{b}_{k,(-i)}$ and $\hat{\sigma}_{k,(-i)}$ computed without observation $i$. It represents the number of standard errors by which $\hat{b}_k$ changes when observation $i$ is removed.
+\end{frame}
+
+\begin{frame}{Influence measures (2)}
+\begin{itemize}
+    \item \textit{Dffit}: measures how much the prediction for observation $i$ changes when the estimation is made \textit{without} observation $i$
+    \item $\text{Dffit}_i = \frac{\hat{y}_i-\hat{y}_{i,(-i)}}{\hat{\sigma}_{(-i)}\sqrt{h_i}}$
+    \item \textit{Covratio} statistic: measures the change in the determinant of the covariance matrix of the estimates when deleting the $i^{th}$ observation (indicates loss in precision)
+    \item \textit{Cook's distance}: measures the influence of observation $i$ on the model as a whole, not on a single coefficient (it combines all the \textit{Dfbeta}'s)
+    \item $D_i = \frac{(\hat{b}-\hat{b}_{(-i)})'(X'X)(\hat{b}-\hat{b}_{(-i)})}{k\hat{\sigma}^2}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cutoffs}
+\begin{itemize}
+    \item Leverage $h_i$ of observation $i$: the average is $\bar{h} = k/N$. If $h_i > 2k/N$ (or $3k/N$), observation $i$ has a high leverage and might be influential
+    \item Change in predicted value \textit{Dffit}: observation $i$ is influential if $|\text{Dffit}_i| > 2$ (general cutoff) or $> 2\sqrt{k/N}$
+    \item Change in a parameter \textit{Dfbeta}: observation $i$ is influential if $|\text{Dfbeta}_{i,k}| > 2$ (general cutoff) or $> 2/\sqrt{N}$ (adj.\ for large sample)
+    \item Impact on the whole model (Cook's distance $D$): observation $i$ is influential if $D_i > 1$ (some use $4/N$)
+    \item \textit{Covratio} statistic: observation $i$ is influential if $|\text{covratio}_i - 1| > 3k/N$
+    \item Python: \texttt{infl = res.get\_influence()}; \texttt{infl.summary\_frame()} gives leverage, Dfbeta, Dffit and Cook's distance for each observation, and \texttt{infl.cov\_ratio} the covratio
+\end{itemize}
+\end{frame}
+
+\end{document}

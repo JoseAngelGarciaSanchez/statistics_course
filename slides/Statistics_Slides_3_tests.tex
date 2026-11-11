@@ -1,0 +1,799 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+\DeclareMathOperator{\plim}{plim}
+
+% Title page information
+\title{Econometrics Part 3}
+\subtitle{The linear model: tests}
+\author{Jose Angel Garcia Sanchez}
+\institute{Sorbonne Data Analytics}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+
+% Set the logo
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+% two columns: the full outline (4 sections + 13 subsections) is too tall for one
+\begin{columns}[T]
+\column{0.5\textwidth}
+\tableofcontents[sections={1-2}]
+\column{0.5\textwidth}
+\tableofcontents[sections={3-4}]
+\end{columns}
+\end{frame}
+
+% Section 1: Tests
+\section{Tests}
+
+\begin{frame}{Outline}
+\tableofcontents[currentsection,hideothersubsections]
+\end{frame}
+
+\subsection{Reminder: common distributions}
+
+\begin{frame}{Usual distributions to know}
+\begin{itemize}
+    \item Normal
+    \item $\chi^2$
+    \item Student (T)
+    \item Fisher
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Normal distribution}
+It is the usual ``bell-shaped'' distribution, also called the Gaussian distribution.
+
+$X \hookrightarrow N(\mu, \sigma^2)$ if its density is:
+\[
+f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}
+\]
+
+Any linear combination of independent normal random variables is a normal random variable.
+\end{frame}
+
+\begin{frame}{The Chi-squared distribution}
+It is defined as the sum of squared independent standard normal variables.
+
+$Y \hookrightarrow \chi_n^2$ if:
+\[
+Y = \sum_{i=1}^{n} X_i^2
+\]
+
+Where $X_i \hookrightarrow N(0,1)$ and the $X_i$ are independent.
+
+The sum of independent $\chi^2$ variables is a $\chi^2$: if $Y_1 \hookrightarrow \chi_{n_1}^2$ and $Y_2 \hookrightarrow \chi_{n_2}^2$ are independent, then $Y_1 + Y_2 \hookrightarrow \chi_{n_1+n_2}^2$ (but a general linear combination, e.g.\ $2Y_1$, is not a $\chi^2$).
+\end{frame}
+
+\begin{frame}{The Student distribution}
+It is defined as the ratio of a standard normal and the square root of an independent $\chi^2$ divided by its degrees of freedom.
+
+$Y \hookrightarrow T_n$ if:
+\[
+Y = \frac{X}{\sqrt{\frac{Z}{n}}}
+\]
+
+Where $X \hookrightarrow N(0,1)$ and $Z \hookrightarrow \chi_n^2$, and are independent. The Student distribution is bell-shaped with fatter tails than the normal, and converges to $N(0,1)$ when $n \to +\infty$.
+\end{frame}
+
+\begin{frame}{The Fisher distribution}
+It is defined as the ratio of two independent $\chi^2$, each divided by its degrees of freedom.
+
+$Y \hookrightarrow F_{p,q}$ if:
+\[
+Y = \frac{Z_1/p}{Z_2/q}
+\]
+
+Where $Z_1 \hookrightarrow \chi_p^2$ and $Z_2 \hookrightarrow \chi_q^2$, and are independent.
+\end{frame}
+
+\subsection{Tests in finite sample: the T-test}
+
+\begin{frame}{Reminder: OLS estimators are BLUE}
+We still consider that the $X$ variables are not random at this stage.
+
+\begin{itemize}
+    \item We have $\hat{b} = (X'X)^{-1}X'y$
+    \item $E(\hat{b}) = b$: unbiased
+    \item $V(\hat{b}) = \sigma^2(X'X)^{-1}$, the smallest among linear unbiased estimators
+    \item $\hat{\sigma}^2 = (\sum \hat{u}_i^2)/(N-k)$: unbiased
+    \item So $\hat{V}(\hat{b}) = \hat{\sigma}^2(X'X)^{-1}$
+    \item Gauss-Markov theorem: under hypotheses 1 to 4, the OLS estimator is the Best Linear Unbiased Estimator (unbiased with a minimal variance)
+    \item So far, no assumption on the distribution of variables ($y$, $X$ or $u$)
+    \item So we don't know yet the distribution of the estimator $\hat{b}$, which is needed for tests
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Distribution of estimators in a finite sample (1)}
+\begin{itemize}
+    \item Finite sample = sample that is not necessarily large
+    \item We need to assume that $u \hookrightarrow N(0,\sigma^2I_N)$
+    \item Then, since $\hat{b} = b + (X'X)^{-1}X'u$ is linear in $u$: $\hat{b} \hookrightarrow N(b, \sigma^2(X'X)^{-1})$
+    \item Calling $\hat{b}_j$ the $j^{th}$ element of $\hat{b}$ and $\alpha_{jj}$ the $j^{th}$ element of the diagonal of $(X'X)^{-1}$, $\sigma_{\hat{b}_j}^2 = \sigma^2\alpha_{jj}$:
+    \item $\hat{b}_j \hookrightarrow N(b_j, \sigma_{\hat{b}_j}^2)$
+    \item Next, we standardize $\hat{b}_j$ to have it follow a standard Normal distribution:
+    \[
+    \forall j, \frac{\hat{b}_j - b_j}{\sigma_{\hat{b}_j}} \hookrightarrow N(0,1)
+    \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Distribution of estimators in a finite sample (2)}
+\begin{itemize}
+    \item The previous expression could be used to test possible values of $b_j$, given $\hat{b}_j$ and $\sigma_{\hat{b}_j}$
+    \item But $\sigma_{\hat{b}_j}$ is unknown: it depends on $\sigma$, the standard deviation of the error terms
+    \item Plugging in the estimate $\hat{\sigma}_{\hat{b}_j}$ instead of the true $\sigma_{\hat{b}_j}$ changes the distribution from a Normal to a Student
+    \item Why: $\hat{\sigma}_{\hat{b}_j}$ is an imperfect (random) estimate of $\sigma_{\hat{b}_j}$
+    \[
+    \forall j, t_j = \frac{\hat{b}_j - b_j}{\hat{\sigma}_{\hat{b}_j}} \hookrightarrow T_{N-k}
+    \]
+\end{itemize}
+
+Where $\hat{\sigma}_{\hat{b}_j}^2 = \hat{\sigma}^2\alpha_{jj}$ (cf.\ \textit{supra}).
+
+Notice that when $N \to \infty$, $T_{N-k}$ converges to $N(0,1)$.
+\end{frame}
+
+\begin{frame}{Formal proof}
+We know that $\hat{\sigma}^2 = \frac{\sum \hat{u}_i^2}{N-k}$. We can show that:
+\[
+(N-k)\frac{\hat{\sigma}^2}{\sigma^2} \hookrightarrow \chi_{N-k}^2
+\]
+
+Proof: using the fact that $u$ is normal and that $\hat{u} = M_X u$ (see Dormont). Moreover, $\hat{\sigma}^2$ is independent of $\hat{b}$.
+
+Then, by definition of the Student distribution (a standard normal over the square root of an independent $\chi^2$ divided by its degrees of freedom):
+\[
+t_j = \frac{(\hat{b}_j - b_j)/\sigma_{\hat{b}_j}}{\sqrt{\frac{(N-k)\hat{\sigma}^2/\sigma^2}{N-k}}} = \frac{\hat{b}_j - b_j}{\hat{\sigma}\sqrt{\alpha_{jj}}} = \frac{\hat{b}_j - b_j}{\hat{\sigma}_{\hat{b}_j}} \hookrightarrow T_{N-k}
+\]
+\end{frame}
+
+\begin{frame}{The test procedure: an example (1)}
+\begin{itemize}
+    \item Consider the model $\text{income} = a + b \cdot \text{height} + c \cdot \text{education} + u$, estimated over $N$ individuals
+    \item Suppose that the estimated parameter $\hat{b}$ is \textit{close} to zero
+    \item We may infer that \textit{height} is irrelevant: its effect on income (holding education fixed) could be zero
+    \item That is, the ``true'' $b$ could be zero
+    \item But even if it is, it is very unlikely that we get exactly $\hat{b} = 0$ (due to intrinsic randomness)
+    \item Given the computed $\hat{b}$, we need a way to assess whether the ``true'' $b$ is zero or not
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The test procedure: an example (2)}
+\begin{itemize}
+    \item Let's call $H_0$ the hypothesis $b = 0$ (the \textit{null hypothesis}), and $H_1$ the hypothesis $b \neq 0$
+    \item Should we consider $H_0$ as true?
+    \item We know that for this model, $t = (\hat{b} - b)/\hat{\sigma}_{\hat{b}} \hookrightarrow T_{N-3}$ ($k = 3$ parameters)
+    \item Is the latter still likely, if we assume $H_0$ is true?
+    \item Assuming $H_0$ is true means that $b = 0$, so that $t$ simplifies to $t = \hat{b}/\hat{\sigma}_{\hat{b}}$
+    \item If this value is unlikely to come from a $T_{N-3}$ distribution, we conclude that $H_0$ is wrong: we \textit{reject} it
+    \item Rejecting $H_0 \Leftrightarrow$ parameter $b$ is significant (significantly different from 0)
+    \item Not rejecting $H_0 \Leftrightarrow$ parameter $b$ is not significant
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Illustration}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{1__PNy6xFgzEcok2gKr2qlMg.jpg}
+\end{center}
+\end{frame}
+
+\begin{frame}{A general test procedure}
+\begin{itemize}
+    \item $H_0: b = 0$
+    \item $H_1: b \neq 0$
+\end{itemize}
+
+\begin{enumerate}
+    \item Find the value $N - k$
+    \item Compute $t = \hat{b}/\hat{\sigma}_{\hat{b}}$
+    \item Compare $|t|$ with the critical value $t^*$: the 97.5\% quantile of a $T_{N-k}$ distribution
+    \item We take 97.5\% because the test is two-sided: we reject if $t$ falls in the 5\% least likely values of the distribution, i.e.\ the lowest 2.5\% or the highest 2.5\%
+    \item If $|t| > t^*$, $H_0$ is rejected: $b$ is significantly different from 0 (significant)
+    \item Otherwise, $H_0$ is not rejected: $b$ is not significantly different from 0
+    \item Always mention the level of significance: here (and it is often the case): $\alpha = 5\%$
+    \item If a variable is not significant, we may consider removing it (but see \textit{power} below)
+\end{enumerate}
+
+The larger $|t|$, the stronger the evidence against $H_0$.
+\end{frame}
+
+\begin{frame}{An even more general test procedure}
+\begin{itemize}
+    \item $H_0: b = a$
+    \item $H_1: b \neq a$
+\end{itemize}
+
+\begin{enumerate}
+    \item Find the value $N - k$
+    \item Compute $t = \frac{\hat{b}-a}{\hat{\sigma}_{\hat{b}}}$
+    \item Compare $|t|$ with $t^*$, the 97.5\% quantile of a $T_{N-k}$ distribution
+    \item If $|t| > t^*$, $H_0$ is rejected: parameter $b$ is significantly different from $a$
+    \item Otherwise, $H_0$ is not rejected: parameter $b$ is not significantly different from $a$
+    \item Always mention the level of significance: here (and it is often the case): $\alpha = 5\%$
+\end{enumerate}
+
+The larger $|t|$, the stronger the evidence against $H_0$.
+\end{frame}
+
+\begin{frame}{Illustration}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{two_tailed_normal.png}
+\end{center}
+\end{frame}
+
+\subsection{Tests in large sample: the T-test}
+
+\begin{frame}{Is it very different?}
+\begin{itemize}
+    \item If $N \to \infty$, all we've covered so far still works, because it works for \textit{any} $N$
+    \item But it relies on the assumption that $u$ is normal
+    \item In large samples, we can drop this assumption and directly use large-sample tests
+    \item These are called \textit{asymptotic tests}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consistency of estimators}
+We want to know what happens if the sample size becomes very large, i.e.\ when $N \to \infty$. Call $\hat{b}_N$ the estimate computed on a sample of size $N$.
+
+\begin{itemize}
+    \item $\hat{b}_N$ is consistent: $\plim(\hat{b}_N) = b$
+    \item Proof:
+    \item Consistency in quadratic mean implies consistency in probability
+    \item Since $\hat{b}_N$ is unbiased, $E[(\hat{b}_N - b)(\hat{b}_N - b)'] = V(\hat{b}_N)$: does it tend to 0?
+    \item $V(\hat{b}_N) = \sigma^2(X'X)^{-1} = \frac{\sigma^2}{N}\left(\frac{X'X}{N}\right)^{-1}$
+    \item Assuming $\frac{X'X}{N} \to V_X$ (finite and invertible), the limit is $0 \cdot V_X^{-1} = 0$
+\end{itemize}
+
+So we see a first advantage of working with large samples: estimates are \textit{consistent}.
+\end{frame}
+
+\begin{frame}{Distribution of estimators}
+Estimators exhibit \textit{asymptotic normality}: when $N \to \infty$, we know that their distribution is a Normal, whatever the distribution of $u$'s (contrary to the finite sample case).
+
+Thanks to the Central Limit Theorem (CLT), we can derive the distribution of estimators when $N \to \infty$. Call $\hat{b}_N$ the estimate computed on a sample of size $N$.
+
+\begin{itemize}
+    \item $\hat{b}_N$ is asymptotically normal: $\sqrt{N}(\hat{b}_N - b) \xrightarrow{d} N(0, \sigma^2V_X^{-1})$
+    \item $\sigma^2$ is the variance of error terms $u$
+    \item ``Inflating'' by $\sqrt{N}$ is needed, otherwise the limit would be degenerate (zero variance)
+    \item Intuition:
+    \item $\hat{b}_N - b = (X'X)^{-1}X'u$, so that it is a linear combination of the $u$'s
+    \item So the CLT applies and gives a normal distribution when $N \to \infty$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Test statistic}
+\begin{itemize}
+    \item In a large sample, $\hat{\sigma}_{\hat{b}_j}$ is an almost perfect estimate of $\sigma_{\hat{b}_j}$
+    \item Formally, $\plim\frac{\hat{\sigma}_{\hat{b}_j}}{\sigma_{\hat{b}_j}} = 1$
+    \item Plugging in $\hat{\sigma}_{\hat{b}_j}$ instead of $\sigma_{\hat{b}_j}$ does not change the limiting distribution, it stays a Normal
+    \[
+    \forall j, t_j = \frac{\hat{b}_j - b_j}{\hat{\sigma}_{\hat{b}_j}} \xrightarrow{d} N(0,1)
+    \]
+\end{itemize}
+
+So tests are run directly using the Normal quantiles. This is consistent with running finite-sample tests on large samples, since $T_{N-k}$ converges to $N(0,1)$ when $N \to \infty$.
+
+Notice that statsmodels displays the finite-sample statistics ($t$ and Student p-values) by default.
+\end{frame}
+
+% Section 2: Size, p-value, forecasting
+\section{Size, p-value, forecasting}
+
+\begin{frame}{Outline}
+\tableofcontents[currentsection,hideothersubsections]
+\end{frame}
+
+\subsection{Size and power}
+
+\begin{frame}{Size and power of a test}
+\begin{itemize}
+    \item $\alpha = \text{Type I error} = P(H_0 \text{ rejected} \mid H_0 \text{ is true})$
+    \item $\beta = \text{Type II error} = P(H_0 \text{ not rejected} \mid H_1 \text{ is true})$
+    \item $\alpha$ is the \textit{size} of a test: when $H_0$ is true, we wrongly reject it $100\alpha\%$ of the time
+    \item $\alpha$ is also called the \textit{significance level}
+    \item $1 - \beta$ is the \textit{power} of a test: it indicates how good a test is at detecting deviations from the null hypothesis $H_0$
+    \item $1 - \beta = P(H_0 \text{ rejected} \mid H_1 \text{ is true})$
+    \item Lowering $\alpha \Rightarrow$ increasing $\beta$ (and reciprocally): there is a trade-off between the two
+    \item Since we cannot minimize both, we set $\alpha$ (e.g.\ 5\%) and look for the test that minimizes $\beta$ for this given $\alpha$
+    \item Minimizing $\beta \Leftrightarrow$ maximizing the power of a test
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Sample size}
+\begin{itemize}
+    \item Dropping a useful variable can lead to inconsistent estimates (omitted variable bias), while keeping an unimportant variable only leads to a loss in precision
+    \item Say we have a small sample: estimates then have a large variance
+    \item If we also set a stringent $\alpha = 0.01$, then even if the true parameter is not zero, its $t$ statistic is likely to be too small to reject $H_0$, although $H_0$ is false
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Choosing the right test size}
+\begin{itemize}
+    \item In that case, we might remove a relevant variable from the analysis simply because we have been too stringent about the size of the test
+    \item Since it is easier to control $\alpha$ than $\beta$, we usually set $\alpha$ according to the sample size, in order to have enough power (i.e.\ ability to discriminate $H_0$ from the true value of the parameter)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Example}
+\begin{itemize}
+    \item Suppose we test the hypothesis $b = 0$, while the true value is $b = 0.1$
+    \item The probability that we reject $H_0$ depends on the standard error of $\hat{b}$, thus on the sample size
+    \item The larger the sample, the smaller the standard error, so the more likely we are to reject $H_0$
+    \item Type II errors thus become increasingly unlikely as the sample size increases
+    \item In a big sample, we can thus decrease the size of the test $\alpha$: e.g.\ 1\%
+    \item Similarly, we can choose a size of 10\% in small samples
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Illustration}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{significance_levels.png}
+\end{center}
+\end{frame}
+
+\subsection{P-value}
+
+\begin{frame}{The p-value}
+\begin{itemize}
+    \item It is defined with respect to the test statistic $t$ that we just computed
+    \item Its definition is: $p\text{-value} = P(|X| > |t|)$ with $X \hookrightarrow T_{N-k}$
+    \item It tells where $t$ is located in the Student distribution $T_{N-k}$ (more precisely, at which quantile)
+    \item Equivalently, it is the smallest size $\alpha$ at which $H_0$ would be rejected
+    \item If $p\text{-value} < 0.05$, it means that $|t| > t^*$ (the 97.5\% quantile)
+    \item It means that $H_0$ is rejected at the 5\% level
+    \item statsmodels OLS results provide p-values for all these tests, so that decision is made easy
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Illustration}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{pvalue_illustration.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Remark}
+\begin{itemize}
+    \item Say we are testing $b = 0$, i.e.\ no impact of some variable on the outcome
+    \item If we don't reject $H_0$, it simply means that there is not enough evidence to reject $H_0$
+    \item But another study could possibly find enough evidence to reject it
+    \item This is why we say that $H_0$ is ``not rejected'', rather than ``accepted''
+    \item Also, the p-value is \textbf{not} the probability that $H_0$ is true: it is computed \textit{assuming} $H_0$ is true
+\end{itemize}
+\end{frame}
+
+\subsection{Forecasting}
+
+\begin{frame}{Using the model to make a forecast}
+\begin{itemize}
+    \item Using the model $y = Xb + u$ estimated on observations $1, \dots, N$, how could we predict $y_T$ for a new observation with regressors $X_T$?
+    \item A natural prediction is: $\hat{y}_T = X_T'\hat{b}$
+    \item Notice that $X_T'$ is a row vector, since in the matrix of observations, one row = one observation
+    \item And the forecast error is: $\hat{e} = y_T - \hat{y}_T$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The forecast error}
+\begin{itemize}
+    \item The ``true'' $y_T$ is: $y_T = X_T'b + u_T$
+    \item The forecast error is thus: $\hat{e} = X_T'(b - \hat{b}) + u_T$
+    \item $u_T$ is uncorrelated with the $(u_i)_{i\in[1,N]}$ and with the $X$'s, so:
+    \item $E(\hat{e}) = 0$: the forecast is unbiased
+    \item $V(\hat{e}) = E(\hat{e}^2) = \sigma^2 X_T'(X'X)^{-1}X_T + \sigma^2$
+    \item It thus depends on:
+    \begin{itemize}
+        \item the variance of the error term $\sigma^2$ (noise that no model can predict)
+        \item the accuracy of $\hat{b}$ (its variance $\sigma^2(X'X)^{-1}$) and the distance between $X_T$ and the $X$'s used for the estimation
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The forecast interval}
+The 95\% forecast (prediction) interval is:
+\[
+\hat{y}_T \pm t^* \sqrt{\hat{\sigma}^2 \left(1 + X_T'(X'X)^{-1}X_T\right)}
+\]
+
+With $t^*$ the 97.5\% quantile of the $T_{N-k}$ distribution (if $N$ is large, it is approximately the 97.5\% quantile of the normal distribution: 1.96).
+\end{frame}
+
+% Section 3: Usual tests: T and F
+\section{Usual tests: T and F}
+
+\begin{frame}{Outline}
+\tableofcontents[currentsection,hideothersubsections]
+\end{frame}
+
+\subsection{Generalization of the T-test}
+
+\begin{frame}{Testing a linear combination of parameters}
+\begin{itemize}
+    \item A T-test can be used to test a linear restriction of parameters, e.g.\ $b_1 + 2b_2 = a$
+    \item For more than one linear restriction, we need the Fisher test (see below)
+    \item $\hat{b}_1 + 2\hat{b}_2$ is normal (linear combination of jointly normal estimators), so the standardized statistic follows a Student distribution
+    \item The test statistic is: $t = \frac{(\hat{b}_1 + 2\hat{b}_2) - a}{\hat{\sigma}_{\hat{b}_1 + 2\hat{b}_2}} \hookrightarrow T_{N-k}$ under $H_0$
+    \item With $\hat{\sigma}_{\hat{b}_1 + 2\hat{b}_2}$ computed as the usual standard error of a sum of variables
+    \item Hint: $V(\lambda X + \mu Y) = \lambda^2V(X) + \mu^2V(Y) + 2\lambda\mu \operatorname{cov}(X,Y)$
+    \item Here: $\hat{V}(\hat{b}_1 + 2\hat{b}_2) = \hat{V}(\hat{b}_1) + 4\hat{V}(\hat{b}_2) + 4\,\widehat{\operatorname{cov}}(\hat{b}_1, \hat{b}_2)$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Cobb Douglas function (1)}
+Say we use a Cobb Douglas production function to describe the technology of $N$ different firms. $y$ is the output, $K$ and $L$ the inputs (capital and labor respectively). $\alpha$ and $\beta$ are the output elasticities of $K$ and $L$ respectively. $A_i$ is the total factor productivity of each firm (comprises firm-specific efficiency). Our goal is to estimate $\alpha$ and $\beta$. For each firm $i$:
+
+\[
+y_i = A_i K_i^{\alpha} L_i^{\beta}
+\]
+
+Taking the log on both sides (all variables are assumed strictly positive), we get:
+
+\[
+\log(y_i) = \log(A_i) + \alpha \log(K_i) + \beta \log(L_i)
+\]
+\end{frame}
+
+\begin{frame}{Example: Cobb Douglas function (2)}
+Call $\log(A) = E[\log(A_i)]$ the average (log) total factor productivity. We can then write:
+
+\[
+\log(y_i) = \log(A_i) - \log(A) + \log(A) + \alpha \log(K_i) + \beta \log(L_i)
+\]
+
+And calling $u_i = \log(A_i) - \log(A)$, we have $E(u_i) = 0$ and:
+
+\[
+\log(y_i) = \log(A) + \alpha \log(K_i) + \beta \log(L_i) + u_i
+\]
+
+Which amounts to a classical linear model of the form $y = a + bx + cz + u$.
+
+Note: defining $A = E(A_i)$ instead would not give $E(u_i) = 0$, since $E[\log(A_i)] \neq \log E(A_i)$ (Jensen's inequality).
+\end{frame}
+
+\begin{frame}{Example: Cobb Douglas function (3)}
+\begin{itemize}
+    \item Data taken from Greene, on 27 firms
+    \item Estimation of a Cobb-Douglas production function
+    \item Parameters of interest: $\alpha$ and $\beta$, the output elasticities (not to be confused with the size and Type II error of a test!)
+    \item If $\alpha = \beta \Rightarrow$ same elasticity for both factors
+    \item If $\alpha + \beta = 1 \Rightarrow$ constant returns to scale
+\end{itemize}
+
+You can use the T-test to test for a single linear combination. For any number of linear combinations (including one), use the Fisher test, see below.
+\end{frame}
+
+\begin{frame}{One-tailed tests}
+\begin{itemize}
+    \item We saw we could test $b = a$ for any value $a$: the procedure is not restricted to testing $b = 0$
+    \item By default, software reports the $b = 0$ test, but we can ask for any test we like
+    \item So far, we implemented \textit{two-sided tests}: $H_0: b = a$ vs.\ $H_1: b \neq a$ (i.e.\ $b > a$ or $b < a$)
+    \item We can run \textit{one-sided tests} if relevant: e.g.\ $b = 0$ vs.\ $b > 0$, or $b = a$ vs.\ $b > a$
+    \item One-tailed tests are used if the results are interesting only if they turn out in one direction
+    \item In practice, we use only one tail of the test distribution
+    \item One-tailed tests still posit $H_0: b = a$, because the $t$ statistic must be computed under a simple hypothesis $H_0$ (assuming $H_0: b < a$ would be too vague)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{One-tailed tests: procedure}
+\begin{itemize}
+    \item Say we wish to compare parameter $b$ to value $a$
+    \item While testing $H_0: b = a$ in the two-tailed test procedure, we get $p\text{-value} = x$
+    \item One-tailed tests still posit $H_0: b = a$, while $H_1$ can either be $b > a$ or $b < a$
+    \item If $\hat{b} > a$, then:
+    \begin{itemize}
+        \item $H_1: b > a$ leads to $p\text{-value} = \frac{x}{2}$
+        \item $H_1: b < a$ leads to $p\text{-value} = 1 - \frac{x}{2}$
+    \end{itemize}
+    \item If $\hat{b} < a$, then:
+    \begin{itemize}
+        \item $H_1: b > a$ leads to $p\text{-value} = 1 - \frac{x}{2}$
+        \item $H_1: b < a$ leads to $p\text{-value} = \frac{x}{2}$
+    \end{itemize}
+\end{itemize}
+
+All this can be easily generalized to a linear restriction involving 2 parameters, e.g.\ $b_1 + b_2 > 0$
+\end{frame}
+
+\begin{frame}{One-tailed tests: example}
+\begin{itemize}
+    \item Say we run an estimation on a large sample, and we want to compare parameter $b$ to value 4
+    \item $\hat{b} = 3.8$ and $\hat{\sigma}_{\hat{b}} = 0.1$
+    \item The Student t-value is: $\frac{3.8-4}{0.1} = -2$
+    \item Testing $H_0: b = 4$ with the two-tailed procedure, we get $p\text{-value} = 0.046 = 4.6\%$
+    \item Since $\hat{b} < 4$, then:
+    \begin{itemize}
+        \item Testing $H_1: b > 4$ leads to $p\text{-value} = 1 - \frac{0.046}{2} = 0.977 = 97.7\%$
+        \item Testing $H_1: b < 4$ leads to $p\text{-value} = \frac{0.046}{2} = 0.023 = 2.3\%$
+    \end{itemize}
+    \item So $b$ is not significantly greater than 4, but it is significantly lower than 4 (at the 5\% level)
+\end{itemize}
+\end{frame}
+
+\subsection{Simultaneous testing: the F-test}
+
+\begin{frame}{Simultaneous testing}
+\begin{itemize}
+    \item We have $\hat{b} \hookrightarrow N(b, \sigma^2(X'X)^{-1})$
+    \item Thus: $\hat{b} - b \hookrightarrow N(0, \sigma^2(X'X)^{-1})$
+    \item Taking the quadratic form of these, ``divided'' by their variance matrix, we get a $\chi_k^2$:
+    \item $(\hat{b} - b)'[\sigma^2(X'X)^{-1}]^{-1}(\hat{b} - b) = \frac{(\hat{b} - b)'(X'X)(\hat{b} - b)}{\sigma^2} \hookrightarrow \chi_k^2$
+    \item But $\sigma$ is unknown
+    \item In a large sample, no problem: we plug in the estimate $\hat{\sigma}$, and it is still (asymptotically) a $\chi_k^2$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Finite vs. large sample}
+\begin{itemize}
+    \item In a finite sample, replacing $\sigma$ by its estimate $\hat{\sigma}$ changes the distribution from a $\chi_k^2$ to a Fisher $F_{(k,N-k)}$ (after dividing by $k$)
+    \item Formally: we use $(N - k)\frac{\hat{\sigma}^2}{\sigma^2}$ which is a $\chi_{N-k}^2$, independent of $\hat{b}$
+    \item We compute the ratio of the two $\chi^2$, each divided by its degrees of freedom, and get a Fisher distribution
+\end{itemize}
+\end{frame}
+
+\begin{frame}{F-test continued}
+\[
+f = \frac{(\hat{b} - b)'(X'X)(\hat{b} - b)}{k\hat{\sigma}^2} \hookrightarrow F_{(k,N-k)}
+\]
+
+\begin{itemize}
+    \item The testing procedure is the same as for the T-test, e.g.\ for $H_0: b = b_0$:
+    \item Assume $H_0$ is true, and replace $b$ by $b_0$ in $f$
+    \item Compute $f$
+    \item Check whether it is likely that $f$ comes from a $F_{(k,N-k)}$ distribution
+    \item If $f$ is larger than the 95\% quantile of $F_{(k,N-k)}$, $H_0$ is rejected at the 5\% level; otherwise, it is not rejected (the F-test only uses the upper tail)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remark on a single-parameter Fisher test}
+\begin{itemize}
+    \item For a test of a single linear combination after a regression, we would normally use the Student test
+    \item Instead, we could also use a Fisher test
+    \item Fisher tests can be used to test any number of linear constraints, so they can be used even if there is only one
+    \item The square of a Student variable follows a Fisher distribution, so Student and Fisher procedures are equivalent here:
+    \item $Y \hookrightarrow T_n$ if: $Y = \frac{X}{\sqrt{Z/n}}$ with $X \hookrightarrow N(0,1)$ and $Z \hookrightarrow \chi_n^2$ independent
+    \item Hence $Y^2 = \frac{X^2/1}{Z/n}$, with $X^2 \hookrightarrow \chi_1^2$
+    \item This is the definition of a Fisher distribution: $Y^2 \hookrightarrow F_{1,n}$
+    \item So $t^2 \hookrightarrow F_{1,N-k}$: the F-test of one constraint gives exactly the same p-value as the two-sided T-test
+\end{itemize}
+\end{frame}
+
+\begin{frame}{About simultaneous testing}
+\begin{itemize}
+    \item A F-test is about testing a group of parameters (here $k$ parameters)
+    \item Why couldn't we use $k$ T-tests instead?
+    \item First, the global F-test takes into account possible correlation between parameters
+    \item Second, even assuming that the estimators are independent (which rarely happens), consider the following example:
+    \item 20 parameters $b_i$, each tested with a T-test of size $a = 0.05$: $h_0^i: b_i = 0$ vs.\ $h_1^i: b_i \neq 0$
+    \item Global test: $H_0$: all the parameters are equal to 0 vs.\ $H_1$: at least one of them is not, rejecting $H_0$ as soon as one $h_0^i$ is rejected
+    \item What is the actual size of this global test?
+    \item $\alpha = P(H_0 \text{ rejected} \mid H_0 \text{ is true}) = 1 - P(\text{no } h_0^i \text{ is rejected} \mid \text{they are all true})$
+    \item $\alpha = 1 - (1-a)^{20} = 1 - (1-0.05)^{20} \approx 0.64$, far above 5\%!
+\end{itemize}
+\end{frame}
+
+\subsection{Generalization of the F-test}
+
+\begin{frame}{A generalization of the F-test (1)}
+\begin{itemize}
+    \item We may want to test only a subset of parameters. In that case, we simply take the preceding formula restricted to the $q$ parameters in question:
+    \item $f = (\hat{\beta} - \beta)'[Z/(q\hat{\sigma}^2)](\hat{\beta} - \beta) \hookrightarrow F_{(q,N-k)}$
+    \item $\beta$: subset of parameters tested
+    \item $q$: number of parameters tested (= no.\ of constraints)
+    \item $Z^{-1}$: submatrix of $(X'X)^{-1}$ corresponding to the $q$ coefficients
+    \item The test that all parameters are 0 (except the constant term) is always reported by statsmodels: it is a general test of the model, called the global F-test
+\end{itemize}
+\end{frame}
+
+\begin{frame}{A generalization of the F-test (2)}
+\begin{itemize}
+    \item We may want to test some linear constraints (ex: $b_1 = b_2$ and $b_3 = b_4$)
+    \item We have to rewrite these $q$ constraints in matrix form: $Rb = r$, with $R$ a $q \times k$ matrix
+    \item Ex.\ with $b = (b_0, b_1, b_2, b_3, b_4)'$: $R = \begin{pmatrix} 0 & 1 & -1 & 0 & 0 \\ 0 & 0 & 0 & 1 & -1 \end{pmatrix}$, $r = \begin{pmatrix} 0 \\ 0 \end{pmatrix}$
+\end{itemize}
+
+The test statistic is the following:
+
+\[
+f = \frac{1}{q}(R\hat{b} - r)'(\hat{\sigma}^2 R(X'X)^{-1}R')^{-1}(R\hat{b} - r) \hookrightarrow F_{(q,N-k)}
+\]
+\end{frame}
+
+\begin{frame}{How to implement this? (1)}
+\begin{itemize}
+    \item In fact, all this amounts to testing whether the unconstrained model is significantly better than the constrained model
+    \item Let's call $R_{nc}^2$ the $R^2$ of the non constrained model, and $R_c^2$ the $R^2$ of the constrained model
+    \item It can be shown that:
+    \[
+    f = \frac{(R_{nc}^2 - R_c^2)}{1 - R_{nc}^2} \cdot \frac{N-k}{q} \hookrightarrow F_{(q,N-k)}
+    \]
+\end{itemize}
+
+With $N$: sample size, $k$: no.\ of parameters of the non constrained model (constant included), $q$: no.\ of constraints. Valid only if both models have the same dependent variable.
+\end{frame}
+
+\begin{frame}{How to implement this? (2)}
+\begin{itemize}
+    \item Call $SSR$ the sum of the squared residuals
+    \item $df$: the residual degrees of freedom of each model ($N$ minus its number of parameters)
+    \item $c$: constrained, $nc$: non constrained models
+    \item It can be shown that:
+    \[
+    f = \frac{(SSR_c - SSR_{nc})}{SSR_{nc}} \cdot \frac{df_{nc}}{df_c - df_{nc}} \hookrightarrow F_{(df_c - df_{nc}, df_{nc})}
+    \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{How to select variables}
+\begin{itemize}
+    \item Choose to use variables in levels, logs or growth rates using economic theory, variable plots, tests or common sense
+    \item Detect perfect multicollinearity and remove it
+    \item Then, 3 options:
+    \item Backward elimination: estimate the model with all the variables and remove those that are not significant ($T$ then $F$ tests)
+    \item Forward selection: begin with only one explanatory variable, the one that is the most correlated with the dependent variable, then introduce the other ones one by one according to their partial correlation coefficient with $y$, while they are significant
+    \item Stepwise regression: same process as forward, and at each step variables that cease to be significant are removed
+    \item No automatic procedure can replace common sense
+\end{itemize}
+\end{frame}
+
+% Section 4: Testing for structural change
+\section{Testing for structural change}
+
+\begin{frame}{Outline}
+\tableofcontents[currentsection,hideothersubsections]
+\end{frame}
+
+\subsection{Purpose}
+
+\begin{frame}{The Chow test}
+\begin{itemize}
+    \item It could be relevant to test whether parameters are the same on 2 subsamples of the data
+    \item Ex: are consumer behaviors the same before and after the German reunification? Idea: test the temporal stability of the regression
+    \item Ex: are the parameters of a wage equation the same for men and women? Idea: test homogeneity of behaviors
+    \item Since we are testing a set of parameters simultaneously, we use an F-test
+    \item The constrained model is the one where parameters are forced to be the same on the two subsamples
+    \item The non constrained model is the one where parameters are allowed to differ across the two subsamples
+    \item The test will tell us if we can or cannot reject homogeneity of behaviors
+\end{itemize}
+\end{frame}
+
+\subsection{Computation}
+
+\begin{frame}{1st method}
+Let's call $SSR$ the sum of squared residuals
+
+\begin{itemize}
+    \item $SSR_c$: of the constrained model (estimated on the whole sample)
+    \item $SSR_1$, $SSR_2$: of the model estimated on the 1st and the 2nd subsample respectively
+    \item The non constrained model's $SSR$ is then $SSR_{nc} = SSR_1 + SSR_2$
+\end{itemize}
+
+\[
+F = \frac{(SSR_c - SSR_{nc})/k}{SSR_{nc}/(N-2k)} \hookrightarrow F(k, N-2k)
+\]
+
+\begin{itemize}
+    \item Rmk 1: this method requires the estimation of 3 models
+    \item Rmk 2: this is the general F formula (with $SSR$ or $R^2$), with $q = k$ constraints
+\end{itemize}
+\end{frame}
+
+\begin{frame}{2nd method}
+We can run the Chow test by estimating one single model, using interacted variables
+
+\begin{itemize}
+    \item Initial model, for each observation $i$: $y_i = b_0 + \sum_{j=1}^{k-1} b_j x_{j,i} + u_i$
+    \item Create a dummy $I_i$ equal to 1 if observation $i$ belongs to the 1st subsample, and 0 otherwise
+    \item For each explanatory variable, create $z_{j,i} = x_{j,i} \times I_i$ (equal to $x_{j,i}$ in the 1st subsample, 0 otherwise)
+    \item Run the ``augmented'' regression: $y_i = b_0 + \sum_{j=1}^{k-1} b_j x_{j,i} + a_0 I_i + \sum_{j=1}^{k-1} a_j z_{j,i} + u_i$
+    \item Parameters are the same across the 2 subsamples if adding these new variables doesn't improve the initial model
+    \item The Chow test thus amounts to an F-test of $H_0: a_0 = a_1 = \dots = a_{k-1} = 0$ ($k$ constraints)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Two remarks}
+\begin{itemize}
+    \item The 2 methods presented here are totally equivalent
+    \item Implicitly, this test assumes that the variance of the error term is the same in the two subsamples, which is not always the case (see below)
+    \item If the second subsample is too small (fewer observations than parameters), we can't estimate the model on it. In that case, we use the Chow \textit{predictive} test (see below)
+\end{itemize}
+\end{frame}
+
+\subsection{Non constant variances}
+
+\begin{frame}{Variance of error terms not constant}
+\begin{itemize}
+    \item Parameters could differ across 2 subperiods, and so could the variance of the error terms
+    \item If it is the case, it can be shown that the actual size of the test differs from the nominal $\alpha$: we may reject the hypothesis of homogeneity of behaviors too often
+    \item The Chow test needs to be adjusted in that case
+    \item The fact that error terms can have a non constant variance is called \textit{heteroskedasticity}, and will be studied later
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Test of equality of variances}
+\begin{itemize}
+    \item We deal with subsamples 1 and 2, calling $T_1$ and $T_2$ their sizes and $k$ the number of parameters in the model
+    \item Assume $u_1 \hookrightarrow N(0, \sigma_1^2)$ and $u_2 \hookrightarrow N(0, \sigma_2^2)$
+    \item We assume a constant variance within each subsample, while $\sigma_1$ and $\sigma_2$ are not necessarily equal
+    \item We thus have: $\frac{\hat{u}_1'\hat{u}_1}{\sigma_1^2} \hookrightarrow \chi_{T_1-k}^2$ and $\frac{\hat{u}_2'\hat{u}_2}{\sigma_2^2} \hookrightarrow \chi_{T_2-k}^2$
+    \item We know that the ratio of two independent $\chi^2$, each divided by its degrees of freedom, gives a Fisher distribution
+    \item Under the null hypothesis $H_0: \sigma_1 = \sigma_2$, this ratio is thus:
+    \[
+    C = \frac{\hat{u}_1'\hat{u}_1}{T_1-k} / \frac{\hat{u}_2'\hat{u}_2}{T_2-k} = \frac{\hat{\sigma}_1^2}{\hat{\sigma}_2^2} \hookrightarrow F(T_1-k, T_2-k)
+    \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remark}
+\begin{itemize}
+    \item Subsamples 1 and 2 are apparently interchangeable
+    \item In practice, we can compute two test statistics: one $> 1$ and the other $< 1$, because one variance will always be greater than the other
+    \item We commonly use the statistic that is $> 1$, and compare it with the upper quantile of the Fisher distribution
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequence on the Chow test}
+\begin{itemize}
+    \item Assume we proved that $\sigma_1 \neq \sigma_2$
+    \item Let's use the ratio $w = \frac{\sigma_1}{\sigma_2}$
+    \item If we multiply the second sample's model by $w$, we make the variances of the error terms the same for the two models
+    \item Ex: $y_2 = a_2 + b_2 x_2 + u_2$ with $V(u_2) = \sigma_2^2$ becomes:
+    \item $w y_2 = w a_2 + w b_2 x_2 + w u_2$, with the variance of the new error term: $V(w u_2) = (\frac{\sigma_1}{\sigma_2})^2 \sigma_2^2 = \sigma_1^2$
+    \item Since we don't know the ``true'' $w$ because we don't know the ``true'' $\sigma_1$ and $\sigma_2$, we replace them by their estimates, computed when running the variance equality test
+    \item I.e.: $\hat{w} = \frac{\hat{\sigma}_1}{\hat{\sigma}_2}$, and we then run the usual Chow test on the reweighted data
+\end{itemize}
+\end{frame}
+
+\subsection{Various issues}
+
+\begin{frame}{What if the second subsample is too small}
+Ex: the second subperiod is too short ($T_2 < k$). We can still run a test, with the following adjustments:
+
+\begin{itemize}
+    \item The model is estimated on the first subperiod ($y_1 = X_1 b_1 + u_1$) to get parameters $\hat{b}_1$
+    \item Comparing the prediction $X_2\hat{b}_1$ and the observation $y_2$ is a way of testing whether model 1 is still valid on period 2
+    \item More precisely, we test whether the prediction error has expectation zero
+    \item Calling $SSR_c$ the sum of squared residuals of the constrained model (estimated on both periods), $SSR_1$ that of model 1, and $T_1$ and $T_2$ the sizes of samples 1 and 2, the following statistic can be used to run a Chow (predictive) test:
+    \[
+    \frac{(SSR_c - SSR_1)/T_2}{SSR_1/(T_1-k)} \hookrightarrow F(T_2, T_1-k)
+    \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remark}
+\begin{itemize}
+    \item The idea of the Chow test is to compare the constrained vs.\ the non constrained model
+    \item Estimating a model with more parameters than observations gives non-unique parameters
+    \item If $T_2 \leq k$, the model can fit subsample 2 perfectly, so all its residuals are zero
+    \item That's why we end up with a formula close to the usual Chow test, where $SSR_2$ would be zero
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Choosing a breakpoint in a time series}
+Unless we know a specific event happened, finding a breakpoint is not obvious
+
+\begin{itemize}
+    \item This is the purpose of the CUSUM (cumulative sum) test
+    \item Method: analyze the prediction of $y_t$ computed with the parameters of the model estimated on the first $t-1$ periods
+    \item The test can begin at date $t = k+1$ at the earliest
+    \item If the regression is stable over time, then the expectation of the forecast error is 0
+    \item We plot the cumulative sum of these so-called \textit{recursive residuals} against time: if the model is stable over time, it must stay within some confidence bounds
+\end{itemize}
+
+For more details, see Cadoret et al., chapter 3.
+\end{frame}
+
+\end{document}

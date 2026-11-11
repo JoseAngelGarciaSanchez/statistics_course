@@ -1,0 +1,474 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+% Title page information
+\title{Econometrics}
+\subtitle{Binary Choice and Selection Models}
+\author{Jose Angel Garcia Sanchez}
+\institute{Université Paris 1 Panthéon-Sorbonne}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+% Set the logo
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% ===============================
+% SECTION 1: Maximum Likelihood
+% ===============================
+\section{Maximum Likelihood}
+
+\begin{frame}{Presentation}
+\begin{itemize}
+    \item An ordinary linear model can be estimated via OLS
+    \item But there exists another method: \textit{Maximum Likelihood}
+    \item We write the \textit{likelihood} of the sample, which we maximize with respect to the parameters we'd like to estimate
+    \item We then get the optimal parameters
+    \item In the OLS method, we minimized the sum of squared residuals: it is again an optimization process
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The model (simple case)}
+\begin{itemize}
+    \item Let's consider an ordinary linear model $y_i = a + bx_i + u_i$
+    \item Assume that the error term $u_i$ follows a normal distribution $N(0, \sigma^2)$
+    \item We consider $a$, $b$, and $x$ as fixed
+    \item Thus $y_i$ follows a normal distribution as well: $N(a + bx_i, \sigma^2)$
+    \item The ``likelihood'' of the sample is the joint probability (density) of the observed sample, seen as a function of the parameters
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Estimation}
+\begin{itemize}
+    \item The distribution of $y$ depends on parameters $a$ and $b$ that are unknown
+    \item If we think that the sample was correctly sampled, then parameters $a$ and $b$ are such that the probability of having sampled this particular data is maximum
+    \item In other words, these parameters should maximize the likelihood of the sample
+    \item This is the ML method: Maximum Likelihood
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Computation}
+\begin{itemize}
+    \item We assume that individuals in the sample are independent
+    \item The likelihood of the sample is thus the product of the likelihood of each individual
+    \item For this reason, we usually take its log to get a sum (easier to handle)
+    \item We thus deal with the ``log-likelihood''
+    \item Parameters $a$ and $b$ are obtained by maximizing the log-likelihood, which is the same as maximizing the likelihood since the log function is strictly increasing
+    \item In practice: usual maximization techniques, or iterative methods
+    \item With ML, we get the same estimates of $a$ and $b$ as with OLS, with $\hat{\sigma}^2$ biased downwards ($\hat{\sigma}^2_{ML} = SSR/N$)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Application}
+\begin{itemize}
+    \item $\forall i$, $y_i \hookrightarrow N(a + bx_i, \sigma^2)$, with density $f(y_i) = \frac{1}{\sigma\sqrt{2\pi}} \exp\left(-\frac{1}{2\sigma^2}(y_i - a - bx_i)^2\right)$
+    \item So the likelihood of the sample is $L = \prod f(y_i)$, and the log-likelihood is:
+    \[LL = \log(L) = \sum \log(f(y_i)) = -\frac{N}{2}\log(2\pi) - N\log\sigma - \frac{1}{2\sigma^2}\sum(y_i - a - bx_i)^2\]
+    \item In the end: $\max_{(a,b)} LL \Longleftrightarrow \min_{(a,b)} \sum(y_i - a - bx_i)^2$: in this special case, OLS and ML estimators of $a$ and $b$ are identical
+    \item Similarly, we find $\hat{\sigma}^2_{ML} = \frac{SSR}{N}$, which is biased downwards (we found earlier that an unbiased estimator was $\hat{\sigma}^2_{OLS} = \frac{SSR}{N-k}$)
+    \item However, although biased, it is consistent, since in a large sample $N$ and $N-k$ are almost the same
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Maximum Likelihood: General Properties}
+Under regularity conditions:
+\begin{itemize}
+    \item ML estimators can be biased
+    \item But they are consistent
+    \item Asymptotically normally distributed
+    \item Asymptotically efficient (they reach the Cramér-Rao bound: smallest asymptotic variance among consistent asymptotically normal estimators)
+    \item Caution: the likelihood must be well specified
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Tests}
+No OLS tests any more, since we are no longer in the OLS framework. Assume we want to test $q$ linear restrictions on parameter $\theta$: $R\theta = r$. The possibilities, which are asymptotically equivalent, are:
+
+\begin{itemize}
+    \item Wald test: estimate parameter $\theta$ by ML, then check whether $R\hat{\theta} - r$ is close to zero, using its asymptotic variance-covariance matrix (this procedure is close to the tests we are used to)
+    \item Likelihood ratio test: estimate the model with and without the constraints, and check whether the difference between the 2 LL is significantly different from 0: $LR = 2(LL_{unconstrained} - LL_{constrained}) \hookrightarrow \chi^2_q$ under $H_0$
+    \item Lagrange multiplier test: estimate the model with the restrictions, then check whether the first order condition of the unrestricted model is significantly violated
+\end{itemize}
+\end{frame}
+
+% ===============================
+% SECTION 2: Binary Choice Models
+% ===============================
+\section{Models of Discrete Choice}
+
+\begin{frame}{Binary Choice}
+\begin{itemize}
+    \item Example: for individual $i$, $y_i = 1$ if unemployed, $y_i = 0$ if employed
+    \item We want to explain $y$ by age, education, etc.
+    \item OLS fits a line, but here there is no real scatterplot since $y$ can take only 2 values, 0 and 1
+    \item Plus, many other problems, the main one being that predictions will be out of range
+    \item So the preferred method is ML
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Discrete Choice Models and OLS (1)}
+\begin{itemize}
+    \item Example: for individual $i$, $y_i = 1$ if unemployed, $y_i = 0$ if employed
+    \item We want to explain $y$ by age and education (the \textit{linear probability model}):
+    \item $y_i = \alpha + \beta\,\text{age}_i + \gamma\,\text{education}_i + \varepsilon_i = x_i b + \varepsilon_i$
+    \item So $E(y_i|x_i) = x_i b$
+    \item And we know that $E(y_i|x_i) = 1 \times P(y_i = 1|x_i) + 0 \times P(y_i = 0|x_i)$, so $P(y_i = 1|x_i) = x_i b$
+    \item $x_i b$ should lie between 0 and 1, which imposes strong restrictions on $x$ and $b \Rightarrow$ inconvenient
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Discrete Choice Models and OLS (2)}
+\begin{itemize}
+    \item Furthermore, $\varepsilon_i$ can take only 2 values: $-x_i b$ with probability $1 - x_i b$, or $1 - x_i b$ with probability $x_i b$
+    \item So that: $V(\varepsilon_i) = x_i b(1 - x_i b)$
+    \item There is heteroskedasticity
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Discrete Choice Models and OLS (3)}
+\begin{itemize}
+    \item Heteroskedasticity could be dealt with using White's standard errors (see lecture on FGLS)
+    \item Non-normality could be dealt with using a large sample size (Central Limit Theorem)
+    \item But the main problem is that we need $E(y_i|x_i)$ to belong to $[0,1]$
+    \item For these various reasons, OLS is inappropriate for predicting probabilities (although the linear probability model with robust standard errors is still often used to estimate average effects)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Solution}
+\begin{itemize}
+    \item We act as if there was an unobserved continuous variable $y^*$ such that $\forall i$, $y_i^* > 0 \Rightarrow y_i = 1$ and $y_i^* \leq 0 \Rightarrow y_i = 0$
+    \item This new variable $y^*$ is continuous: we can thus refer to our usual model, with some adaptations
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Model}
+\begin{itemize}
+    \item Assume that $y^* = X\beta + u$
+    \item Let $F$ be the cumulative distribution function (cdf) of $u$, with a distribution symmetric around 0
+    \item $P(y_i = 1) = P(y_i^* > 0) = P(X_i\beta + u_i > 0) = P(u_i > -X_i\beta) = P(u_i < X_i\beta) = F(X_i\beta)$
+    \item Usual functions for $F$ are the normal (\textit{Probit model}) or the logistic (\textit{Logit model})
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Distributions}
+\begin{itemize}
+    \item Normal: $F(x) = \Phi(x) = \int_{-\infty}^{x} \frac{1}{\sqrt{2\pi}}e^{-t^2/2}dt$
+    \item Logistic: $F(x) = \frac{1}{1+e^{-x}} = \frac{e^x}{1+e^x}$
+    \item These 2 are very close, and give similar results
+    \item Expectation: 0 for both distributions
+    \item Variance: 1 for the standard normal, $\pi^2/3$ for the logistic
+    \item Characteristics of the \textit{Logit}: extreme events have higher probability (heavier tails); parameters are interpreted more easily (odds-ratios, see below)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Log-likelihood (1)}
+Likelihood function for the entire sample:
+
+\[L = \prod P[y_i = 1|x_i, \beta]^{y_i} P[y_i = 0|x_i, \beta]^{1-y_i}\]
+
+So that when $y_i = 0$, only the right-hand-side part is there, and when $y_i = 1$, only the left-hand-side part is there.
+
+And we have $P[y_i = 1|x_i, \beta] = P[y_i^* > 0|x_i, \beta] = F(x_i\beta)$, so
+
+\[LL = \sum y_i \log(F(x_i\beta)) + \sum(1 - y_i)\log(1 - F(x_i\beta))\]
+
+Maximizing this log-likelihood amounts to differentiating this expression with respect to parameter $\beta$ and setting it to zero (it can be shown that it is globally concave for the Probit and the Logit).
+\end{frame}
+
+\begin{frame}{Log-likelihood (2)}
+\[LL = \sum y_i \log(F(x_i\beta)) + \sum(1 - y_i)\log(1 - F(x_i\beta))\]
+
+The first order condition is the following (derivative wrt $\beta$ is 0): $\frac{\partial LL}{\partial \beta} = 0$, which in fact is a column vector of derivatives (derivative of $LL$ wrt $\beta_1$, $\beta_2$, etc.)
+
+\[\frac{\partial LL}{\partial \beta} = \sum\left[\frac{y_i - F(x_i\beta)}{F(x_i\beta)(1 - F(x_i\beta))}f(x_i\beta)\right]x_i' = 0\]
+
+For the logistic distribution, $F(x) = \frac{e^x}{1+e^x}$ and $f(x) = \frac{e^x}{(1+e^x)^2} = F(x)(1-F(x))$, so:
+
+\[\frac{\partial LL}{\partial \beta} = \sum\left(y_i - \frac{\exp(x_i\beta)}{1 + \exp(x_i\beta)}\right)x_i' = 0\]
+
+The optimal value for $\beta$ is found with optimization techniques (iterative).
+\end{frame}
+
+\begin{frame}{Remark: Scaling}
+\begin{itemize}
+    \item Recall that $P(y_i = 1) = P(u_i < X_i\beta) = F(X_i\beta)$: this holds only if $u$ has a standardized distribution (of variance 1 for the Probit)
+    \item $u$ could in fact have \textit{any} standard deviation $\sigma$; in that case: $P(u_i < X_i\beta) = P(u_i/\sigma < X_i\beta/\sigma) = F(X_i\beta/\sigma)$
+    \item So the estimate we compute is really $\beta/\sigma$: there is no way to identify the two separately
+    \item The convention is to set $\sigma = 1$ for the Probit model, and $\sigma = \pi/\sqrt{3}$ (the standard deviation of the logistic distribution) for the Logit model
+    \item This multiplicative scaling changes neither the signs nor the ratios $\beta_j/\beta_k$ of parameters, nor the predictions
+    \item The only consequence is that Probit and Logit parameters are scaled differently: $\hat{b}_{logit} \simeq 1.6\,\hat{b}_{probit}$ in practice ($\pi/\sqrt{3} \simeq 1.8$ if we only match the variances)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remark: Predicted and Actual Frequency}
+\begin{itemize}
+    \item $\hat{p}_i = \hat{P}(y_i = 1) = F(x_i\hat{\beta})$
+    \item For the Logit, $\hat{p}_i = 1/(1 + \exp(-x_i\hat{\beta})) = \exp(x_i\hat{\beta})/(1 + \exp(x_i\hat{\beta}))$
+    \item $\hat{\beta}$ is the solution of the first order condition, so that we get:
+\end{itemize}
+
+\[\sum\left(y_i - \frac{\exp(x_i\hat{\beta})}{1 + \exp(x_i\hat{\beta})}\right)x_i' = 0\]
+
+\[\sum(y_i - \hat{p}_i)x_i' = 0 \quad\Longleftrightarrow\quad \sum \hat{p}_i x_i' = \sum y_i x_i'\]
+
+If there is a constant term in $x$, then $\sum \hat{p}_i = \sum y_i$: the predicted frequency is exactly equal to the actual frequency. This holds approximately for the Probit model.
+\end{frame}
+
+\begin{frame}{Interpreting Parameters (1)}
+Let $x_i$ be a row vector of observations (corresponding to individual $i$) and $\beta$ be a column vector of parameters.
+
+\begin{itemize}
+    \item $P(y_i = 1) = F(x_i\beta)$
+    \item Parameters enter non-linearly in the expression
+    \item If we differentiate $F(x_i\beta)$ with respect to variable $x_k$, calling $f$ the derivative of $F$, we get:
+\end{itemize}
+
+\[\frac{\partial F(x_i\beta)}{\partial x_{i,k}} = f(x_i\beta)\beta_k\]
+
+With $f$ either the standard normal density $\phi$ (\textit{probit}) or the logistic density $\exp(x)/(1+\exp(x))^2$ (\textit{logit}).
+
+The effect of a change in $x_{i,k}$ depends on the values of $x_i$, so it is different for each person.
+\end{frame}
+
+\begin{frame}{Interpreting Parameters (2)}
+\[\frac{\partial F(x_i\beta)}{\partial x_{i,k}} = f(x_i\beta)\beta_k\]
+
+\begin{itemize}
+    \item The \textit{sign} of the effect of a change in $x_{i,k}$ can however be determined
+    \item Since $f > 0$, it is the sign of $\beta_k$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Marginal Effects}
+\begin{itemize}
+    \item We still miss a way to measure the effect of $X$ on $y$: the \textit{marginal effects}
+    \item Consider the average person in the sample and compute the prediction $\hat{y}_0 = F(\bar{X}\hat{\beta})$
+    \item Then increase variable $x_1$ by one unit, and compute the prediction again: $\hat{y}_1$
+    \item The marginal effect of $x_1$ (at the mean) is $\hat{y}_1 - \hat{y}_0$: by how much the probability of $[y = 1]$ increases when $x_1$ increases by one unit (e.g.\ one more year of education, switching from male to female if gender is a dummy)
+    \item Always mention that this was computed for the average person; it can also be computed for specific individuals (e.g.\ the average 40-year-old white-collar worker)
+    \item Alternative: the \textit{average marginal effect} (AME), i.e.\ the individual effects averaged over the whole sample
+    \item statsmodels: \texttt{res.get\_margeff(at="mean")}, or \texttt{at="overall"} for the AME
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Logit vs. Probit}
+\begin{itemize}
+    \item Since the two distributions are quite similar, predictions will be similar as well
+    \item However, values of parameters differ: this is because of the different scaling
+    \item We usually get $\hat{b}_{logit} \simeq 1.6\, \hat{b}_{probit}$
+    \item Matching only the variances would give: $\hat{b}_{logit} \simeq (\pi/\sqrt{3}) \hat{b}_{probit} \simeq 1.8\, \hat{b}_{probit}$
+    \item Again, this does not mean that the impact of explanatory variables is higher with the Logit model
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Logit: Odds-ratios (1)}
+\begin{itemize}
+    \item Parameters $\beta$ do not have a linear impact: we can compute marginal effects, but the Logit provides more information
+    \item Recall that $P(y_i = 1) = P(y_i^* > 0) = F(X_i\beta) = \frac{1}{1+e^{-X_i\beta}}$
+    \item I.e.\ $\forall i$, $P(y_i = 1) = p_i$ and $P(y_i = 0) = 1 - p_i$
+    \item Let's define the \textit{odds} $c_i$ as $c_i = \frac{p_i}{1-p_i}$
+    \item $[y_i = 1]$ is $c_i$ times more likely to happen than $[y_i = 0]$
+    \item We have $p_i = \frac{1}{1+e^{-X_i\beta}} = \frac{e^{X_i\beta}}{1+e^{X_i\beta}}$
+    \item And $1 - p_i = \frac{1}{1+e^{X_i\beta}}$
+    \item So $c_i = e^{X_i\beta}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Logit: Odds-ratios (2)}
+\begin{itemize}
+    \item We thus get $c_i = e^{X_i\beta}$
+    \item But $X_i\beta = \beta_0 + \sum_j x_{i,j}\beta_j$
+    \item So $c_i = e^{\beta_0 + \sum_j x_{i,j}\beta_j} = e^{\beta_0}\prod_j e^{x_{i,j}\beta_j}$
+    \item If variable $x_{i,k}$ increases by 1 unit, $c_i$ is multiplied by $e^{\beta_k}$
+    \item If variable $x_k$ increases by 1 unit, it multiplies the \textit{odds} that $[y_i = 1]$ happens by $e^{\beta_k}$
+    \item We call \textit{odds-ratio} associated with variable $x_k$ the value $e^{\beta_k}$ (in Python: \texttt{np.exp(res.params)})
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Goodness of Fit (1)}
+\begin{itemize}
+    \item Pseudo-$R^2$ (McFadden): $R^2 = \frac{LL_{fit} - LL_0}{LL_{max} - LL_0} = 1 - \frac{LL_{fit}}{LL_0}$ (since $LL_{max} = 0$)
+    \item $LL_{fit}$: log-likelihood of the model
+    \item $LL_0$: log-likelihood of a model with only a constant, where the probability is estimated by the proportion of ones in the sample
+    \item $LL_{max}$: maximum log-likelihood attainable. In our case, 0, because a model that predicts the observed values perfectly has likelihood 1, and $\log(1) = 0$
+    \item statsmodels reports it as ``Pseudo R-squ.''
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Goodness of Fit (2)}
+\begin{itemize}
+    \item We can also evaluate the goodness of fit of the model by comparing correct and incorrect predictions
+    \item Predicted outcomes: since $0 \leq \hat{p}_i \leq 1$, we need to choose a cut-off point $c$ that will determine if the prediction will be 0 or 1 (usually: $c = 1/2$)
+    \item \textit{Sensitivity} (sensibilité): true positive rate in predictions
+    \item \textit{Specificity} (spécificité): true negative rate in predictions
+    \item ROC (Receiver Operating Characteristic) curve: plots the fraction of $y = 1$ values correctly classified (true positives) against the fraction of $y = 0$ values incorrectly classified (false positives) as $c$ varies, i.e.\ \textit{sensitivity} against \textit{(1 $-$ specificity)}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The ROC Curve}
+\begin{itemize}
+    \item Comes from signal detection theory, developed during WW2
+    \item The accuracy of the classification rule is measured with the area under the ROC curve (AUC)
+    \item The area represents the ability of the procedure to correctly classify individuals, and lies between 0.5 (random classification) and 1 (perfect classification)
+    \item A random classification rule yields a diagonal ROC curve
+    \item Trade-off between sensitivity and specificity: the more bowed the curve is, the better the model is
+    \item The closer the ROC curve to the upper-left corner, the higher the predictive power
+    \item The optimal cut-off point is determined by the analyst depending on the issue studied
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Could Heteroskedasticity be an Issue?}
+\begin{itemize}
+    \item In Probit and Logit models, homoskedasticity of $u$ is assumed in the latent variable framework (normalization: $\sigma = 1$)
+    \item Recall that in the Probit model, only $\beta/\sigma$ can be identified
+    \item Heteroskedasticity means that $\sigma$ is a function of some variables, say $\sigma_i = \exp(Z_i\gamma)$
+    \item Remark 1: it is best not to have a constant in variables $Z$, because then testing $\gamma = 0$ amounts to testing $\sigma = \exp(0) = 1$, which means homoskedasticity
+    \item Remark 2: variables $Z$ should be exogenous variables not already in the model (see Cameron \& Trivedi)
+    \item In this case, we model $P(y_i = 1) = P(y_i^* > 0) = F(X_i\beta/\sigma_i)$ and plug in $\sigma_i = \exp(Z_i\gamma)$ in the likelihood
+    \item Stata's \textit{hetprobit} provides this estimation, with a test of $\gamma = 0$; in Python, the likelihood can be written with statsmodels' \texttt{GenericLikelihoodModel}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Could Endogeneity be an Issue?}
+\begin{itemize}
+    \item Just like OLS, Probit and Logit estimates are inconsistent if one or several explanatory variables are endogenous
+    \item The usual latent variable model is written: $y^* = X\beta + x\gamma + u$, with $x$ endogenous
+    \item In that case, given we find enough instruments $Z$, the endogenous variable should be instrumented: $x = Zb + Xc + v$
+    \item To estimate this now 2-equation model in the maximum likelihood framework, we only need to postulate that $(u, v)$ follow a bivariate normal distribution and plug this into the likelihood
+    \item Testing endogeneity of $x$ amounts to testing whether $u$ and $v$ are uncorrelated
+    \item All this requires both normality and homoskedasticity of $u$ and $v$, so Probit is required (no Logit here)
+\end{itemize}
+\end{frame}
+
+% ===============================
+% SECTION 3: Sample Selection Models
+% ===============================
+\section{Sample Selection Models}
+
+\begin{frame}{About Selection}
+\begin{itemize}
+    \item E.g.\ consider the interpretation of average scores over time of an achievement test
+    \item A decline over time may be due to real deterioration in student knowledge, or it may just reflect a selection effect, i.e.\ more students have been taking the test over time and the new test takers are the relatively weaker students
+    \item Selection can arise from self-selection (individuals choose to participate or not in a particular activity) or sample selection (the sample is not random: e.g.\ those who participate in the activity are oversampled)
+    \item These problems are treated alike in Econometrics through \textit{sample selection models}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Heckit Model (or Generalized Tobit)}
+\begin{itemize}
+    \item Say a variable $y_2^*$ is partially observed ($y_2^*$ is the latent variable)
+    \item Say we have another latent variable $y_1^*$, such that $y_2^*$ is observed only if $y_1^* > 0$
+    \item E.g.\ health expenditures or wages
+    \item $y_1$ is participation in the labor market: $y_1 = 0$ (does not participate) or $y_1 = 1$ (participates)
+    \item $y_2$ is the observed wage, which cannot be observed if the person does not participate in the labor market: that person may have a positive potential wage $y_2^*$, but we only observe $y_1 = 0$
+    \item We'll see here why the Probit model is useful for the estimation of the 1st step equation
+    \item Note: in the \textit{standard} Tobit model, $y_2$ is observed only if it is above (or below) a certain threshold
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Model}
+Latent variables: $y_1^* = x_1b_1 + u_1$ and $y_2^* = x_2b_2 + u_2$
+
+\begin{itemize}
+    \item Participation equation: $y_1 = 1$ if $y_1^* > 0$, $y_1 = 0$ otherwise
+    \item Outcome equation: $y_2 = y_2^*$ if $y_1 = 1$, $y_2$ is missing otherwise
+\end{itemize}
+
+\[\begin{pmatrix} u_1 \\ u_2 \end{pmatrix} \hookrightarrow N\left(\begin{pmatrix} 0 \\ 0 \end{pmatrix}; \begin{pmatrix} 1 & \sigma_{1,2} \\ \sigma_{1,2} & \sigma_2^2 \end{pmatrix}\right)\]
+
+The Logit model could not be used here for the 1st equation, since the error terms are jointly normal: we have to consider the Probit model.
+\end{frame}
+
+\begin{frame}{The Likelihood}
+\[L = \prod[P(y_{1,i}^* \leq 0)]^{1-y_{1,i}}[f(y_{2,i}|y_{1,i}^* > 0) \times P(y_{1,i}^* > 0)]^{y_{1,i}}\]
+
+\begin{itemize}
+    \item First term: discrete contribution when $y_{1,i}^* \leq 0$
+    \item Second term: continuous contribution when $y_{1,i}^* > 0$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Conditional Means}
+\[E(y_2|x, y_1^* > 0) = E(x_2 b_2 + u_2|x_1 b_1 + u_1 > 0) = x_2 b_2 + E(u_2|u_1 > -x_1 b_1)\]
+
+In the normal case, it can be shown that:
+
+\[E(y_2|x, y_1^* > 0) = x_2 b_2 + \sigma_{1,2}\lambda(x_1 b_1)\]
+
+With $\lambda$ the \textit{inverse Mills ratio}: $\lambda(z) = \frac{\phi(z)}{\Phi(z)}$
+
+\begin{itemize}
+    \item If $u_1$ and $u_2$ are independent, then $E(u_2|u_1 > -x_1 b_1) = 0$ and OLS are consistent in the second equation; otherwise, they are not: we have to take into account the sample selection bias $\sigma_{1,2}\lambda(x_1 b_1)$
+    \item Error terms represent unobservable heterogeneity: it is likely that individual heterogeneity has an impact both on the decision to participate and on the outcome (e.g.\ health care expenditures)
+    \item The sign of $\operatorname{corr}(u_1, u_2)$ is the sign of $\sigma_{1,2}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Heckman Two-Step Estimator}
+\[E(y_2|x, y_1^* > 0) = x_2 b_2 + \sigma_{1,2}\lambda(x_1 b_1)\]
+
+Idea: first estimate $\lambda$, then estimate the model replacing $\lambda$ by its estimate $\hat{\lambda}$
+
+\begin{enumerate}
+    \item Probit regression of $y_1$ on $x_1$ (indeed, $P(y_1^* > 0) = \Phi(x_1 b_1)$)
+    \item Compute $\hat{\lambda} = \frac{\phi(x_1 \hat{b}_1)}{\Phi(x_1 \hat{b}_1)}$
+    \item OLS regression of $y_2$ on $x_2$ and $\hat{\lambda}$, on the selected sample only ($y_1 = 1$)
+    \item The coefficient of $\hat{\lambda}$ estimates $\sigma_{1,2}$: its sign gives the sign of the correlation between the 2 error terms, and if it is not significant, the 2 equations can be considered independent
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Remarks on the two-step estimator}
+\begin{itemize}
+    \item Two-step Heckman estimates are consistent
+    \item This method is easy and fast to implement
+    \item But the usual OLS standard errors of the second step are wrong ($\hat{\lambda}$ is itself estimated): they must be corrected
+    \item There is also an efficiency loss (not appropriate in small samples)
+    \item A more widely used method is Maximum Likelihood on the full model
+    \item Notice that the use of a Logit would not be appropriate here
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Identification Considerations}
+\begin{itemize}
+    \item Theoretically, the exact same regressors can appear in both equations, because $\lambda(\cdot)$ is non-linear: no strict multicollinearity
+    \item However, in that case, the model is close to unidentified, because the inverse Mills ratio is almost linear over a wide range of values
+    \item This leads to a great instability of parameters (see slides on near-perfect multicollinearity)
+    \item Thus, at least one exclusion restriction is usually required: at least one variable in the first equation (selection) should be absent from the second equation (conditional outcome)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Selection on observables vs.\ unobservables}
+\begin{itemize}
+    \item If we find out that there is in fact no correlation between the 2 equations (check $\rho = \operatorname{corr}(u_1, u_2) = \sigma_{1,2}/\sigma_2$), they can be estimated independently through a Two-Part model (see next slide)
+    \item If there is no correlation: selection is said to be made on observables, because it is fully explained by regressors
+    \item If there is correlation: selection is said to be made on unobservables, because it is partly explained by error terms, which comprise all the unobservable information
+    \item The Two-Part model can also be used if the correlation of the inverse Mills ratio with regressors is too strong (near-perfect multicollinearity)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Two-Part Model}
+This model intentionally does not take into account potential correlation between the error terms of the 2 equations
+
+\begin{enumerate}
+    \item Participation equation: Probit or Logit that gives the probability to participate
+    \item Conditional outcome equation: anything we like (linear model, count data, etc.) that gives the level of activity, given that the individual participates (warning: count models then need a distribution truncated at 0, such as the zero-truncated Poisson or negative binomial); so it is more flexible than the Generalized Tobit framework
+\end{enumerate}
+
+And the prediction of the model is the product of the two: $E(y) = P(y > 0) \times E(y|y > 0)$. Notice that we lose the assessment of the selection effect but gain in flexibility (no need to stick to Normal models).
+\end{frame}
+
+\end{document}

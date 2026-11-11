@@ -1,0 +1,437 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+% Title page information
+\title{Econometrics Part 4}
+\subtitle{Heteroskedasticity and Autocorrelation}
+\author{Jose Angel Garcia Sanchez}
+\institute{Sorbonne Data Analytics}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+
+% Set the logo
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Section 1: Generalized least squares
+\section{Generalized least squares}
+
+\begin{frame}{Outline}
+\tableofcontents[currentsection]
+\end{frame}
+
+\begin{frame}{What if assumptions do not hold?}
+
+\begin{itemize}
+    \item Heteroskedasticity: error terms do not have the same variance (e.g.\ size effect for firms) $\rightarrow$ mostly cross sections
+    \item Autocorrelation: the error term of period $t$ is correlated with the error term of period $t-1$, and/or $t-2$, \dots\ $\rightarrow$ mostly time series
+\end{itemize}
+
+In that case, $V(u) \neq \sigma^2 I_N$: OLS are still unbiased and consistent, but no longer efficient (not BLUE). Furthermore, the usual standard errors are wrong, so all the tests we derived are no longer valid. We thus have to modify the estimation to make a reliable assessment of parameter values.
+
+\end{frame}
+
+\begin{frame}{The problem with OLS}
+
+Let's use the following model: $y = Xb + u$
+
+\begin{itemize}
+    \item Assume that $V(u) = \sigma^2\Omega$, with $\Omega$ any suitable matrix (it must be symmetric and positive definite)
+    \item $E(\hat{b}_{ols}) = b$: still unbiased
+    \item But $V(\hat{b}_{ols}) = \sigma^2(X'X)^{-1}X'\Omega X(X'X)^{-1}$
+    \item If we run an OLS regression with a software, we will get $\hat{b}$ computed as $\hat{b} = (X'X)^{-1}X'y$ (right) but $\hat{V}(\hat{b})$ computed as $\hat{V}(\hat{b}) = \hat{\sigma}^2(X'X)^{-1}$ (wrong)
+    \item The software will thus give us unbiased estimates, but wrong variances, so all the tests we may run are wrong (T-test, F-test)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{How can we correct for these problems?}
+
+\begin{itemize}
+    \item We need to transform the model so as to get homoskedastic and uncorrelated error terms
+    \item We can use \textit{generalized} least squares, which will replace \textit{ordinary} least squares
+    \item We will eventually end up re-weighting the model with the help of the variance matrix of error terms
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Generalized least squares}
+
+Let's use the following model: $y = Xb + u$
+
+\begin{itemize}
+    \item Assume that $V(u) = \sigma^2\Omega$
+    \item $\Omega$ is symmetric and positive definite, so $\Omega^{-1}$ exists and $\Omega^{-1/2}$ exists as well
+    \item $\Omega^{-1/2}\Omega^{-1/2} = \Omega^{-1}$
+    \item Let's multiply the model on the left-hand side by $\Omega^{-1/2}$: $\Omega^{-1/2}y = \Omega^{-1/2}Xb + \Omega^{-1/2}u$
+    \item The error terms of this ``new'' model are homoskedastic and uncorrelated: $V(\Omega^{-1/2}u) = \sigma^2\Omega^{-1/2}\Omega\Omega^{-1/2} = \sigma^2 I_N$
+    \item We can use the transformed model for the estimation of $b$ and most of all for inference
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The GLS estimator}
+
+\begin{itemize}
+    \item Using OLS on the transformed model, we get the GLS estimator
+    \item $\hat{b}_{gls} = (X'\Omega^{-1}X)^{-1}X'\Omega^{-1}y$
+    \item It is obtained by minimizing the sum of squared residuals \textit{weighted} by $\Omega^{-1}$
+    \item GLS are unbiased, and BLUE (Aitken's theorem: Gauss-Markov applied to the transformed model)
+    \item The ``true'' variance that can be used for tests is the following: $V(\hat{b}_{gls}) = \sigma^2(X'\Omega^{-1}X)^{-1}$
+    \item Notice that the transformed model does not necessarily have a meaning: it is only useful for the estimation procedure
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Using GLS}
+
+Since GLS amounts to OLS computed on a model that has nice properties, we can implement all the tests we described earlier (T-test, F-test).
+
+\end{frame}
+
+\begin{frame}{The FGLS estimator}
+
+\begin{itemize}
+    \item GLS have nice properties
+    \item The problem is however that we do not know the true $\Omega$: we thus have to use an estimator of $\Omega$, and we turn to \textit{feasible} generalized least squares (FGLS)
+    \item We cannot estimate all the variances and covariances of the $N$ error terms: $\Omega$ has $N(N+1)/2$ distinct elements, and we only have $N$ observations
+    \item We have to impose a structure on $\Omega$, with few parameters to estimate (see later)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Remarks}
+
+\begin{itemize}
+    \item FGLS is an estimate of true GLS
+    \item When the sample size goes to infinity, the estimation of $\Omega$ becomes almost perfect (if $\Omega$ is consistently estimated)
+    \item So FGLS and GLS are asymptotically equivalent
+    \item FGLS have good properties only asymptotically
+    \item FGLS are usually biased in small samples
+    \item Thus, in small samples, we cannot be sure that FGLS outperform OLS
+\end{itemize}
+
+\end{frame}
+
+% Section 2: Heteroskedasticity
+\section{Heteroskedasticity}
+
+\begin{frame}{Outline}
+\tableofcontents[currentsection]
+\end{frame}
+
+\begin{frame}{Heteroskedasticity}
+
+\begin{itemize}
+    \item Heteroskedasticity usually occurs with cross sections
+    \item Let's assume error terms are uncorrelated but do not have the same variance (e.g.\ households with very different income levels)
+    \item The variance matrix of error terms is a diagonal matrix $\sigma^2\Omega$
+    \item It is thus easy to compute $\Omega^{-1}$
+    \item GLS is then sometimes called the Weighted Least Squares estimator (WLS), because each observation is weighted by the inverse of the standard deviation of its error term
+    \item It is as if we put a smaller weight on high-income households (if their error terms have a larger variance)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Re-weighting matrix}
+
+\[
+\Omega = \begin{pmatrix}
+a_1 & 0 & \cdots & 0\\
+0 & a_2 & \cdots & 0\\
+\vdots & \vdots & \ddots & \vdots\\
+0 & 0 & \cdots & a_N
+\end{pmatrix}
+\text{ so } \Omega^{-1} = \begin{pmatrix}
+1/a_1 & 0 & \cdots & 0\\
+0 & 1/a_2 & \cdots & 0\\
+\vdots & \vdots & \ddots & \vdots\\
+0 & 0 & \cdots & 1/a_N
+\end{pmatrix}
+\]
+
+And the re-weighting matrix is:
+
+\[
+\Omega^{-1/2} = \begin{pmatrix}
+1/\sqrt{a_1} & 0 & \cdots & 0\\
+0 & 1/\sqrt{a_2} & \cdots & 0\\
+\vdots & \vdots & \ddots & \vdots\\
+0 & 0 & \cdots & 1/\sqrt{a_N}
+\end{pmatrix}
+\]
+
+\end{frame}
+
+\begin{frame}{Testing for heteroskedasticity}
+
+\begin{itemize}
+    \item First, simply look at the residuals (plot them against the fitted values and the $X$'s)
+    \item Then, various tests are available
+    \item \textit{Breusch-Pagan} test: regress the squared residuals on all the explanatory variables
+    \item \textit{White} test: regress the squared residuals on all the explanatory variables, their squares and their cross-products
+    \item If these parameters are jointly significant (test statistic $N R^2$ of this regression, $\chi^2$ with as many degrees of freedom as regressors, constant excluded), we conclude there is heteroskedasticity
+    \item Python: \texttt{het\_breuschpagan} and \texttt{het\_white} from \texttt{statsmodels.stats.diagnostic}
+    \item We will eventually use these regressions to estimate $\Omega$ and run the weighted regression
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Weighted least squares in practice (1)}
+
+Let's consider a heteroskedastic model $y = Xb + u$
+
+\begin{itemize}
+    \item The variance matrix of error terms is a diagonal with $N$ unknown elements $V(u_i)$
+    \item Assume that $V(u)$ depends on variables $X$: $V(u) = \sigma^2 \exp(X\gamma)$ (we drop $i$'s)
+    \item The exponential ensures the variance is always positive
+    \item The squared residuals are the empirical counterparts of the error variances because $V(u_i) = E(u_i^2)$
+    \item So this equation becomes empirically: $\hat{u}^2 \approx \sigma^2 \exp(X\gamma)$, so that $\log(\hat{u}^2) = X\gamma + \text{constant} + \text{error}$
+    \item The error variances can now be estimated
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Weighted least squares in practice (2)}
+
+What to do:
+
+\begin{enumerate}
+    \item Estimate the original regression $y = Xb + u$ with OLS, save the residuals, compute their squares
+    \item Using plots or any other method, pick the right $X$'s for the auxiliary regression: $\log(\hat{u}^2) = X\gamma + \text{constant}$
+    \item Compute the \textit{predicted} squared residual from the auxiliary regression: $\hat{h}_i = \exp(\widehat{\log(\hat{u}_i^2)})$ (the retransformation constant does not matter here: rescaling all weights leaves the estimates unchanged)
+    \item For each individual $i$, divide every term of the original model (including the constant) by $\sqrt{\hat{h}_i}$
+    \item Run OLS on the transformed data, or directly \texttt{sm.WLS(y, X, weights=1/h\_hat)}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Should we always use FGLS?}
+
+\begin{itemize}
+    \item FGLS do not have nice small sample properties, while OLS do
+    \item But using OLS gives us wrong standard errors for estimates
+    \item We could use OLS and compute corrected standard errors for them
+    \item So we can keep OLS estimates because they are unbiased and consistent, and use the White (1980) matrix to run tests only
+    \item That's what most people do
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The White matrix}
+
+White (1980) proved that a consistent estimator for the variance matrix of parameters is:
+
+\[
+\hat{V}(\hat{b}_{ols}) = (X'X)^{-1}\left(\sum_{t=1}^{N} \hat{u}_t^2 X_t X_t'\right)(X'X)^{-1}
+\]
+
+Where the $\hat{u}$'s are the residuals from the OLS regression, and $X_t$ is the (column) vector of explanatory variables of observation $t$.
+
+This matrix can be used as an estimate of the true variance of OLS estimators, and thus for tests. They are called ``White'' or ``robust'' standard errors (because they are robust to heteroskedasticity). In statsmodels: \texttt{sm.OLS(y, X).fit(cov\_type="HC1")} (HC0 is White's original formula; HC1 adds a small-sample correction).
+
+\end{frame}
+
+% Section 3: Autocorrelation
+\section{Autocorrelation}
+
+\begin{frame}{Outline}
+\tableofcontents[currentsection]
+\end{frame}
+
+\begin{frame}{Autocorrelation}
+
+\begin{itemize}
+    \item The error term of period $t$ is correlated with the error term of period $t-1$, and/or $t-2$, \dots
+    \item Focus here on first-order autocorrelation: $u_t = \rho u_{t-1} + \varepsilon_t$
+    \item Where $|\rho| < 1$ and $\varepsilon$ is a ``white noise''
+    \item ``White noise'' means $\forall t$, $E(\varepsilon_t) = 0$ \textit{and} $V(\varepsilon_t) = \sigma_\varepsilon^2$, the $\varepsilon_t$ being uncorrelated with each other and with past $u$'s
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{First-order autocorrelation}
+
+The variance of error terms $\sigma^2\Omega$ is no longer a diagonal matrix because $\Omega$ is no longer the identity matrix:
+
+\[
+\Omega = \begin{pmatrix}
+1 & \rho & \rho^2 & \cdots & \rho^{N-1}\\
+\rho & 1 & \rho & \cdots & \rho^{N-2}\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+\rho^{N-1} & \rho^{N-2} & \rho^{N-3} & \cdots & 1
+\end{pmatrix}
+\]
+
+And we have: $E(u_t) = 0$, $V(u_t) = \sigma^2 = \frac{\sigma_\varepsilon^2}{1-\rho^2}$.
+
+The correlation coefficient between $u_{t-h}$ and $u_t$ is $\rho^{|h|}$.
+
+\end{frame}
+
+\begin{frame}{Testing for first-order autocorrelation}
+
+Durbin-Watson test: $H_0: \rho = 0$ vs.\ $H_1: \rho \neq 0$, with test statistic:
+
+\[
+DW = \frac{\sum_{t=2}^{N}(\hat{u}_t - \hat{u}_{t-1})^2}{\sum_{t=1}^{N}\hat{u}_t^2} \approx 2(1 - \hat{\rho}) \in [0, 4]
+\]
+
+The Durbin-Watson table gives two values $d_L < d_U$ (which depend on $N$ and $k$) such that:
+
+\begin{center}
+\small
+\begin{tabular}{ccccc}
+$DW \in [0, d_L]$ & $[d_L, d_U]$ & $[d_U, 4-d_U]$ & $[4-d_U, 4-d_L]$ & $[4-d_L, 4]$\\
+reject: $\rho > 0$ & \textit{inconclusive} & $H_0$ not rejected & \textit{inconclusive} & reject: $\rho < 0$
+\end{tabular}
+\end{center}
+
+Requisites: the model needs a constant term, and the lagged dependent variable can't be among the explanatory variables. statsmodels reports $DW$ in the OLS summary.
+
+\end{frame}
+
+\begin{frame}{The Breusch-Godfrey test}
+
+\begin{itemize}
+    \item This test detects autocorrelation of order higher than 1 (up to order $p$), and works even when the lagged dependent variable is among the explanatory variables
+    \item Run OLS on the model
+    \item Save the residuals $e_t$
+    \item Estimate the auxiliary regression explaining $e_t$ as a linear function of the explanatory variables $+ \, p$ previous residuals
+    \item Under the null (parameters of previous residuals simultaneously equal to zero), $(N-p) \cdot R^2$ follows a $\chi^2$ distribution with $p$ degrees of freedom
+    \item In the test, the $R^2$ used is the one from the auxiliary regression
+    \item Python: \texttt{acorr\_breusch\_godfrey(res, nlags=p)} from \texttt{statsmodels.stats.diagnostic}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{What to do if we find autocorrelation}
+
+\begin{itemize}
+    \item Finding autocorrelation often means that the model is misspecified
+    \item We thus should not directly switch from OLS to FGLS, but rather try to change the model
+    \item E.g.\ include the lagged dependent variable ($y$ from the previous period) as an explanatory variable, switch from $x$ to $\log(x)$, use variables expressed as growth rates instead of levels, etc.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{FGLS in the case of autocorrelation}
+
+\begin{itemize}
+    \item If modifying the model doesn't help, we have to correct for autocorrelation using FGLS, just as we did in the case of heteroskedasticity
+    \item We will use ``quasi-differencing''
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Reminder: first-order autocorrelation}
+
+\[
+\Omega = \begin{pmatrix}
+1 & \rho & \rho^2 & \cdots & \rho^{N-1}\\
+\rho & 1 & \rho & \cdots & \rho^{N-2}\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+\rho^{N-1} & \rho^{N-2} & \rho^{N-3} & \cdots & 1
+\end{pmatrix}
+\]
+
+So we know the form of $\Omega^{-1}$:
+
+\[
+\Omega^{-1} = \frac{1}{1-\rho^2}\begin{pmatrix}
+1 & -\rho & 0 & \cdots & 0\\
+-\rho & 1+\rho^2 & -\rho & \cdots & 0\\
+0 & -\rho & 1+\rho^2 & \cdots & 0\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & 0 & \cdots & -\rho & 1
+\end{pmatrix}
+\]
+
+\end{frame}
+
+\begin{frame}{The FGLS transforming matrix}
+
+We can find a matrix $\Gamma$ such that $(1-\rho^2)\Omega^{-1} = \Gamma'\Gamma$ with:
+
+\[
+\Gamma = \begin{pmatrix}
+\sqrt{1-\rho^2} & 0 & 0 & \cdots & 0\\
+-\rho & 1 & 0 & \cdots & 0\\
+0 & -\rho & 1 & \cdots & 0\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & 0 & \cdots & -\rho & 1
+\end{pmatrix}
+\]
+
+And the FGLS transformed model is written as: $\Gamma y = \Gamma Xb + \Gamma u$.
+
+\end{frame}
+
+\begin{frame}{The transformed model}
+
+\begin{itemize}
+    \item The FGLS transformed model is written as: $\Gamma y = \Gamma Xb + \Gamma u$
+    \item In the new model, $y_1$ is replaced by $\sqrt{1-\rho^2}\,y_1$ and all the other outcome variables $y_t$ are replaced by $y_t - \rho y_{t-1}$
+    \item Same for each independent variable $x_j$, including the constant
+    \item Except for the 1st observation, all observations are ``quasi-differenced''
+    \item $y_t - \rho y_{t-1} = b_0(1-\rho) + b_1(x_{1,t} - \rho x_{1,t-1}) + \dots + \varepsilon_t$
+    \item $\forall t > 1$, $u_t - \rho u_{t-1} = \varepsilon_t$, which is a white noise: now regular OLS can be used on this new model
+    \item The last thing we need to run the regression is an estimate of $\rho$, $\hat{\rho}$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Estimation: the two-step method}
+
+\begin{enumerate}
+    \item Run the original OLS regression $y = Xb + u$
+    \item Save the residuals $\hat{u}_t$
+    \item Estimate $\rho$ by $\hat{\rho} = \frac{\sum \hat{u}_t \hat{u}_{t-1}}{\sum \hat{u}_{t-1}^2}$ (OLS regression of $\hat{u}_t$ on $\hat{u}_{t-1}$)
+    \item Quasi-difference the model using $\hat{\rho}$
+    \item Then run OLS on the transformed model
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Estimation: the iterative method}
+
+\textit{Cochrane-Orcutt} (drops the 1st observation) or \textit{Prais-Winsten} (keeps it, multiplied by $\sqrt{1-\rho^2}$) method
+
+\begin{enumerate}
+    \item Run the two-step method once, save $\hat{\rho}^{(1)}$ and $\hat{b}^{(1)}$
+    \item Compute the residuals of the \textit{original} model with these new parameters: $\hat{u} = y - X\hat{b}^{(1)}$
+    \item Use these residuals to compute a new $\hat{\rho}$, $\hat{\rho}^{(2)}$, and quasi-difference again
+    \item Repeat until two successive $\hat{\rho}$'s are sufficiently close to each other
+\end{enumerate}
+
+statsmodels: \texttt{sm.GLSAR(y, X, rho=1).iterative\_fit()} (Cochrane-Orcutt style: drops the 1st observation)
+
+\end{frame}
+
+\begin{frame}{Last, what if we have both autocorrelation and heteroskedasticity?}
+
+\begin{itemize}
+    \item We may use a generalization of the White variance matrix if we have both heteroskedasticity and autocorrelation that could not be corrected for
+    \item It is used when we assume that the correlation between the $u$'s is zero after some lag $L$
+    \item We get the so-called \textit{Newey-West standard errors}, which are heteroskedasticity and autocorrelation consistent (HAC)
+    \item statsmodels: \texttt{sm.OLS(y, X).fit(cov\_type="HAC", cov\_kwds=\{"maxlags": L\})}
+\end{itemize}
+
+\end{frame}
+
+\end{document}

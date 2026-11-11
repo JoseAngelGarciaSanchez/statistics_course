@@ -1,0 +1,533 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+\DeclareMathOperator{\plim}{plim}
+
+% Title page information
+\title{Econometrics Part 5}
+\subtitle{Endogeneity}
+\author{Jose Angel Garcia Sanchez}
+\institute{Université Paris 1 Panthéon-Sorbonne}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+
+% Set the logo
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Section 1: Framework
+\section{Framework}
+
+\begin{frame}{Considering random explanatory variables}
+\begin{itemize}
+    \item In the basic framework, explanatory variables $X$ are usually considered not random
+    \item This amounts to reasoning conditionally on $X$, i.e.\ as if the $X$ were fixed
+    \item An important hypothesis was that $X$ and $u$ were independent, which is always the case if $X$ is fixed
+    \item But the $X$'s can be considered as random variables
+    \item All the previous results still hold (as long as $E(u|X) = 0$), because they were obtained conditionally on $X$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Assumptions for estimation}
+\begin{enumerate}
+    \item $E(u) = 0$
+    \item $X$ is random and $E(u|X) = 0$: in particular, $\forall t, t'$, $X_t$ is uncorrelated with $u_{t'}$
+    \item $\operatorname{rank}(X) = k$
+    \item $E(uu') = \sigma^2I_N$
+    \item Error terms are iid $(0, \sigma^2)$
+    \item $\plim(X'X/N) = V_X$, which is a positive definite matrix (when $N$ goes to infinity, the $X$ variables always keep some variance)
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Properties of OLS: unbiasedness}
+\begin{itemize}
+    \item $\hat{b}_{ols}$ is still unbiased
+    \item We know that $\hat{b}_{ols} = (X'X)^{-1}X'y = b + (X'X)^{-1}X'u$
+    \item So $E(\hat{b}_{ols}) = b + E[(X'X)^{-1}X'u]$
+    \item We get: $E[(X'X)^{-1}X'u] = E_X\big[E_u[(X'X)^{-1}X'u \mid X]\big]$\\
+    $= E_X\big[(X'X)^{-1}X'E_u[u \mid X]\big]$ and $E_u[u \mid X] = 0$
+    \item In the same way, we get an expression for the variance of $\hat{b}_{ols}$:
+    \item $V(\hat{b}_{ols}) = \sigma^2E[(X'X)^{-1}]$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Properties of OLS: consistency}
+$\hat{b}_{ols}$ is still consistent:
+
+\[\plim(\hat{b}_{ols}) = b + \left[\plim\left(\frac{X'X}{N}\right)\right]^{-1}\plim\left(\frac{X'u}{N}\right) = b + V_X^{-1} \cdot 0 = b\]
+
+We will see on the next slide that the asymptotic distribution of $\hat{b}$ is a normal, as expected.
+\end{frame}
+
+\begin{frame}{Asymptotics: OLS estimators}
+We wish now to enlarge our framework to the case where $u$'s are only iid (and not necessarily normal) and where $X$'s can be random (and not necessarily fixed). In what follows, we will thus use the following asymptotic results, obtained under the usual model hypotheses:
+
+\[\plim(\hat{b}_{ols}) = b + \left[\plim\left(\frac{X'X}{N}\right)\right]^{-1}\plim\left(\frac{X'u}{N}\right) = b + V_X^{-1} \cdot 0 = b\]
+
+\[\plim(\hat{\sigma}_{ols}^2) = \sigma^2\]
+
+\[\sqrt{N}(\hat{b}_{ols} - b) \xrightarrow{d} \mathcal{N}(0, \sigma^2V_X^{-1})\]
+\end{frame}
+
+\begin{frame}{Asymptotic tests}
+Tests of $r$ linear constraints ($C$ is of size $(r,k)$) are run using the following formula:
+
+\[f = \frac{(C\hat{b}_{ols} - Cb)'(C(X'X)^{-1}C')^{-1}(C\hat{b}_{ols} - Cb)}{\sigma^2} \xrightarrow{d} \chi_r^2\]
+
+Where, as before in the finite sample case, $\sigma^2$ is unknown. But since by assumption we work with a very large sample, $\hat{\sigma}_{ols}^2$ is a consistent estimate of $\sigma^2$. We can thus replace $\sigma^2$ by its consistent estimate, without having to replace the $\chi^2$ with a Fisher.
+\end{frame}
+
+\begin{frame}{General properties}
+If we assume that the $X_i$ are iid and the $u$'s are normal, then:
+\begin{itemize}
+    \item OLS estimators are consistent, and normal conditionally on $X$
+    \item The T- and F-statistics keep their Student and Fisher distributions (their conditional distribution does not depend on $X$): we can run the usual T- and F-tests
+    \item If the $u$ are not normal but only iid, we need to make sure the sample is large, and use the asymptotic version of the usual T- and F-tests
+    \item In that case, Normal replaces Student and $\chi^2$ replaces Fisher
+\end{itemize}
+\end{frame}
+
+% Section 2: Non-exogeneity
+\section{Non-exogeneity}
+
+\begin{frame}{Non-exogenous explanatory variables}
+\begin{itemize}
+    \item Let's use the following model: $y_t = X_t'b + u_t$
+    \item Assume that $E(X_tu_t) \neq 0$: some explanatory variables are correlated with the current error term
+    \item In this case, $\plim(X'u/N) \neq 0$
+    \item OLS is biased and inconsistent
+\end{itemize}
+
+\[\plim(\hat{b}_{ols}) = b + \left[\plim\left(\frac{X'X}{N}\right)\right]^{-1}\plim\left(\frac{X'u}{N}\right) \neq b\]
+
+Even if we increase the size of the sample, we won't get the right value for $b$.
+\end{frame}
+
+\begin{frame}{Exogeneity: definitions}
+\begin{itemize}
+    \item \textbf{Case 1}: Strict exogeneity: $\forall t, t'$, $E(X_tu_{t'}) = 0$
+    \item $X$ and $u$ are never correlated
+    \item \textbf{Case 2}: (Contemporaneous) exogeneity: $\forall t$, $E(X_tu_t) = 0$
+    \item $X$ and $u$ are uncorrelated for any given time period
+    \item \textbf{Case 3}: $X$ predetermined: $\forall t' \geq t$, $E(X_tu_{t'}) = 0$
+    \item $X$ uncorrelated with current and future $u$
+\end{itemize}
+
+This class focuses on cross-sections, so on the second case.
+\end{frame}
+
+\begin{frame}{Omitted variables}
+Let's assume the true model is the following:
+
+\[y_t = X_t'b + w_td + v_t\]
+
+If we omit $w_t$ and estimate the following model instead:
+
+\[y_t = X_t'b + u_t\]
+
+\begin{itemize}
+    \item $w_t$ is included in $u_t$
+    \item If $w_t$ is correlated with $X$, then $E(X_tw_t) \neq 0$ and thus $E(X_tu_t) \neq 0$: OLS is biased
+    \item Remark: in the fixed $X$ case, we would get the same result using the Frisch-Waugh theorem
+    \item When a variable that is correlated with the $X$'s is omitted, estimators suffer from an \emph{omitted variable bias}
+    \item Estimators are inconsistent
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Variables measured with error}
+Let's use a very simple one-variable theoretical model (no constant if variables are centered):
+
+\[y_t^* = x_t^* b + v_t\]
+
+Assume that $x$ is measured with error. To run the estimation, we have access to values $y_t = y_t^*$ and $x_t = x_t^* + e_t$, $e_t$ being a white noise. The estimated model is thus $y_t = x_t b + u_t$, with $u_t = v_t - be_t$. We thus have:
+
+\[E(x_tu_t) = E[(x_t^* + e_t)(v_t - be_t)] = -b\sigma_e^2 \neq 0\]
+
+OLS is thus inconsistent, and biased towards 0 (\textit{attenuation bias}): $\plim(\hat{b}_{ols}) = b\,\sigma_{x^*}^2/(\sigma_{x^*}^2 + \sigma_e^2)$, so the influence of $x$ on $y$ is underestimated.
+\end{frame}
+
+\begin{frame}{Simultaneous equations}
+Say we have the following system of equations:
+\begin{itemize}
+    \item $Y_t = a + bX_t + u_t$ (1)
+    \item $X_t = Y_t + Z_t$ (2)
+    \item Because of equation (1), $Y_t$ is endogenous, and because of equation (2), $X_t$ is endogenous too
+    \item At the system level, only $Z_t$ is exogenous
+    \item To get back to what we are used to, we should rewrite endogenous variables as functions of exogenous variables only
+\end{itemize}
+
+The system can be rewritten (if $b \neq 1$): $Y_t = \frac{a}{1-b} + \frac{b}{1-b}Z_t + \frac{1}{1-b}u_t$ and $X_t = \frac{a}{1-b} + \frac{1}{1-b}Z_t + \frac{1}{1-b}u_t$. Notice that $X_t$ is a function of $u_t$: in equation (1), it is thus correlated with the error term. A basic hypothesis of OLS is violated, and if we estimate (1) without taking into account the information provided by (2), estimates will be inconsistent.
+\end{frame}
+
+\begin{frame}{Autocorrelation with lagged dependent variable}
+Assume we use the following model:
+
+\[y_t = b_0 + b_1x_t + b_2y_{t-1} + u_t\]
+
+With: $u_t = \rho u_{t-1} + \varepsilon_t$
+
+We can then write:
+\begin{itemize}
+    \item $y_t = b_0 + b_1x_t + b_2y_{t-1} + \rho u_{t-1} + \varepsilon_t$ (1)
+    \item And at the same time: $y_{t-1} = b_0 + b_1x_{t-1} + b_2y_{t-2} + u_{t-1}$ (2)
+    \item Equation (2) shows that $y_{t-1}$ depends on $u_{t-1}$, so $y_{t-1}$ is correlated with the error term $\rho u_{t-1} + \varepsilon_t$ in equation (1)
+    \item The lagged outcome variable is thus not exogenous in the estimated model
+    \item If error terms are not autocorrelated ($\rho = 0$), $y_{t-1}$ is uncorrelated with $u_t$: it is predetermined (case 3)
+    \item How to test for this: Durbin's $h$ statistic
+\end{itemize}
+\end{frame}
+
+\begin{frame}{General issue in policy evaluation}
+\begin{itemize}
+    \item Say we want to evaluate the impact of a policy on people's wages (e.g.\ a training program)
+    \item A model describing the wage outcome is $Y_i = a + bX_i + cP_i + u_i$, where $X$ comprises individual characteristics and $P$ is a dummy variable indicating whether the individual was assigned to the program
+    \item If the policy is not \emph{randomized}, i.e.\ if being assigned to the program depends on unobserved individual characteristics, then $P$ is correlated with $u$ and the impact of the policy cannot be estimated consistently
+    \item Intuitive reason: those who were assigned to the program are not comparable to those who were not, so the latter cannot be considered as a valid control group for the former
+    \item This is called a \emph{selection effect}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequences}
+In the case of non-exogeneity (also called endogeneity) of some explanatory variables:
+\begin{itemize}
+    \item OLS estimators are biased: on average, we do not get the true value of parameters
+    \item OLS estimators are inconsistent: even if we increase the size of the sample, the bias does not go to zero and we will never get the true value of parameters
+\end{itemize}
+
+We thus have to use another estimation technique, using auxiliary variables: the instrumental variables technique.
+\end{frame}
+
+% Section 3: The IV estimator
+\section{The IV estimator}
+
+\begin{frame}{Instrumental variables}
+Let's use the following model, where (to make things simple) \emph{all} $X$'s are endogenous, except the constant (which can't be endogenous by definition):
+
+\[y = Xb + u\]
+
+Let's consider a set of variables $Z_{(N,p)}$ different from the $X$'s but including the constant, with the following properties:
+\begin{itemize}
+    \item $E(Z_tu_t) = 0$: variables $Z$ are exogenous
+    \item $\operatorname{rank}(Z) = p$
+    \item $\plim(Z'X/N) = V_{ZX}$, with $V_{ZX}$ a non-null matrix of dimension $(p,k)$ and rank $k$
+    \item $\plim(Z'Z/N) = V_Z$, with $V_Z$ a finite positive definite matrix of dimension $(p,p)$
+\end{itemize}
+
+Meaning: variables $Z$ need to be both exogenous and correlated with $X$, and the number of instruments $p$ must be at least the number of explanatory variables $k$ ($p \geq k$).
+\end{frame}
+
+\begin{frame}{The estimator}
+The original model is:
+
+\[y = Xb + u\]
+
+\begin{itemize}
+    \item Assume we regress $X$ on variables $Z$
+    \item We compute their predictions $\tilde{X}$
+    \item We use these new variables in the model instead:
+\end{itemize}
+
+\[y = \tilde{X}b + u\]
+
+\begin{itemize}
+    \item It should work because $\tilde{X}$ is only made up of $Z$ that are exogenous: $\tilde{X}$ is thus exogenous too
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Intuition (1)}
+\begin{itemize}
+    \item OLS on the original model $y = Xb + u$ are inconsistent because variables $X$ are correlated with $u$
+    \item We can't replace the $X$'s by other variables because the model should remain unchanged
+    \item We would like to get rid of this correlation, while keeping the information provided by $X$
+    \item Imagine a regression where each variable in $X$ would be explained by the set of variables $Z$, say: $\forall j$, $x_j = Zd + e$
+    \item A prediction for $x_j$ would be: $\hat{x}_j = Z\hat{d}$
+    \item If this regression is good enough, $\hat{x}_j$ is close to the true $x_j$
+    \item And $\hat{x}_j$ is a linear combination of variables $Z$ that are exogenous: it is thus exogenous as well
+    \item We can thus replace $x_j$ by $\hat{x}_j$ in the original model
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Transforming the model}
+The original model is:
+
+\[y = Xb + u\]
+
+The new model is:
+
+\[y = \tilde{X}b + u\]
+
+\begin{itemize}
+    \item Problem: the new model is not directly equivalent to the original one: only $X$ was modified
+    \item How can we make the new model equivalent to the old one?
+    \item Notice that $\tilde{X}$ is the prediction of $X$ using the $Z$
+    \item So that $\tilde{X} = P_ZX$
+    \item We need to multiply every term of the original model by $P_Z$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The IV estimator}
+\begin{itemize}
+    \item Let's call $P_Z$ the orthogonal projection matrix that projects on $L(Z)$: $P_Z = Z(Z'Z)^{-1}Z'$
+    \item $P_Z$ is symmetric ($P_Z' = P_Z$) and idempotent ($P_ZP_Z = P_Z$)
+    \item Let's define $\tilde{y} = P_Zy$, $\tilde{u} = P_Zu$ and $\tilde{X} = P_ZX$
+    \item It's as if we had premultiplied the original model by $P_Z$: $\tilde{y} = \tilde{X}b + \tilde{u}$
+    \item The IV estimator is: $\hat{b}_{iv} = (\tilde{X}'\tilde{X})^{-1}\tilde{X}'\tilde{y} = (X'P_ZX)^{-1}X'P_Zy$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remark}
+\begin{itemize}
+    \item To get to the estimated model, we multiply both $y$ and $X$ on the left by $P_Z$
+    \item What would happen if we multiplied only $X$ and not $y$?
+    \item $(\tilde{X}'\tilde{X})^{-1}\tilde{X}'y = (X'P_ZX)^{-1}X'P_Zy = \hat{b}_{iv}$
+    \item It does not change anything as regards $\hat{b}_{iv}$: in practice, we transform only $X$ and leave $y$ unchanged
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Intuition (2)}
+We can also explain this geometrically:
+\begin{itemize}
+    \item To remove the correlation between $X$ and $u$, we project the model onto the vector space $L(Z)$, spanned by the columns of $Z$, which are at the same time exogenous and correlated with $X$
+    \item This amounts to keeping from $X$ only the exogenous information, uncorrelated with the error terms
+    \item The more the $Z$ are correlated with the $X$ (and the more numerous the $Z$'s are), the more precise the estimator is, because the information loss is minimal
+    \item $P_Zy$ is the prediction from the regression of $y$ on variables $Z$, same for $P_ZX$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remarks}
+\begin{itemize}
+    \item If $p = k$ (same number of instruments $Z$ and of explanatory variables $X$), we get $\hat{b}_{iv} = (Z'X)^{-1}Z'y$
+    \item Proof: rewriting $\hat{b}_{iv}$, given that in this case, matrix $Z'X$ is square and invertible
+    \item But with this minimal number of instruments, we cannot test the validity of the instruments (Sargan test, see below)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Generalization (1)}
+\begin{itemize}
+    \item What if some variables in $X$ are endogenous, and others exogenous?
+    \item Let's call $X_1$ the set of the exogenous ones and $X_2$ the set of the endogenous ones: the matrix notation would be $X = (X_1, X_2)$ (again, the constant is always exogenous)
+    \item In that case, variables $X_1$ can be used as instruments in addition to the $Z$
+    \item Let's call $W$ this extended set of instruments: $W = (Z, X_1)$
+    \item To compute the IV estimator, we premultiply $X$ by $P_W$
+    \item $P_WX = P_W(X_1, X_2) = (P_WX_1, P_WX_2) = (X_1, P_WX_2)$
+    \item Indeed, since $X_1$ belongs to $W$, it is projected onto itself and remains unchanged
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Generalization (2)}
+\begin{itemize}
+    \item Conclusion: we will use $X_1$ as additional instruments because they will remain unchanged in the transformed model, and will help to instrument the $X_2$
+    \item We only need to make sure that there are at least as many ``new'' instruments $Z$ as endogenous variables $X_2$, and don't rely only on the exogenous $X_1$
+    \item $Z$ are sometimes called \emph{excluded instruments}
+    \item We realize here that the constant, exogenous by nature, belongs to the exogenous $X_1$, and that we were right to use it as an instrument in the first place
+    \item That's what we did when describing the first stage regression, which contains a constant by default
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Important: final notation}
+\begin{itemize}
+    \item Since the exogenous variables from the set of variables $X$ will always be used as instruments, we don't usually bother mentioning it
+    \item \textbf{We usually call $Z$ the global matrix of instruments that contains both the excluded instruments and the variables from $X$ that are exogenous}
+    \item So that the hypotheses and formulae are the same as the ones presented in the beginning
+    \item We only need to make sure that there are at least as many excluded instruments as endogenous variables
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Properties of the IV estimator (1)}
+\begin{itemize}
+    \item $\hat{b}_{iv}$ is biased in a small sample
+    \item We cannot derive a general expression for its finite-sample variance-covariance matrix
+    \item But it is consistent (when the sample size goes to infinity)
+    \item It is asymptotically normal:
+
+    \[\sqrt{N}(\hat{b}_{iv} - b) \xrightarrow{d} \mathcal{N}\left(0, \sigma^2(V_{ZX}'V_Z^{-1}V_{ZX})^{-1}\right)\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Properties of the IV estimator (2)}
+There is no general expression for its variance-covariance matrix, but we can derive its \emph{asymptotic} variance-covariance matrix, which is consistently estimated by:
+
+\[\widehat{V}_{asympt}\left(\sqrt{N}(\hat{b}_{iv} - b)\right) = \hat{\sigma}_{iv}^2\left(\frac{X'P_ZX}{N}\right)^{-1}\]
+
+with $\hat{\sigma}_{iv}^2 = \frac{SSR_{iv}}{N} = \frac{\hat{u}'\hat{u}}{N}$ and $\hat{u} = y - X\hat{b}_{iv}$
+
+\begin{itemize}
+    \item When OLS is consistent, IV is less precise than OLS
+    \item Precision increases with the number of instruments (asymptotically)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Tests on regression parameters}
+\begin{itemize}
+    \item We do not have convenient properties of the estimator in the finite sample case
+    \item We can only run asymptotic tests: Wald tests, similar to F-tests, but when the sample size is large
+    \item Example of a test for $r$ linear constraints on parameters:
+\end{itemize}
+
+\[f = \frac{(C\hat{b}_{iv} - Cb)'[C(X'P_ZX)^{-1}C']^{-1}(C\hat{b}_{iv} - Cb)}{\hat{\sigma}_{iv}^2} \xrightarrow{d} \chi_r^2\]
+
+With $r$ the number of linear restrictions: $C$ is of size $(r,k)$.
+
+Proof: taking the expression of the asymptotic normality of $\hat{b}_{iv}$, taking its quadratic form and ``dividing'' it by its variance gives a $\chi^2$ distribution (the ``true'' variance is replaced by its consistent estimator).
+\end{frame}
+
+% Section 4: IV in practice
+\section{IV in practice}
+
+\begin{frame}{How to run IV estimation}
+\begin{itemize}
+    \item Python: \texttt{IV2SLS} from \texttt{statsmodels.sandbox.regression.gmm} (basic), or the \texttt{linearmodels} package (\texttt{linearmodels.iv.IV2SLS}), which also reports first-stage statistics and the exogeneity and Sargan tests
+    \item This amounts to running two-stage least squares
+    \item Intuition: first, regress the $y$ and $X$'s on variables $Z$, then use the predictions in the model instead of the original values
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Two-stage least squares (1)}
+\begin{itemize}
+    \item Run $k+1$ regressions, to get $P_Zy$ and $P_ZX$
+    \item Estimate OLS on the transformed model $P_Zy = P_ZXb + \tilde{u}$
+    \item We thus get $\hat{b}_{iv} = (X'P_ZX)^{-1}X'P_Zy$
+    \item The first-stage regressions can be used to assess the relevance of the instruments (they have to be correlated enough with the $X$'s)
+    \item Remark: this provides the same values if we do not replace $y$ by $P_Zy$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Two-stage least squares (2)}
+\textbf{Warning}: if we do this procedure ``by hand'', running 2 OLS regressions, instead of running the dedicated IV procedure of the software, the standard errors of the second regression cannot be used for tests on the coefficients
+
+\textbf{Reason}: in the second stage equation, residuals are computed as: $\hat{u} = P_Zy - P_ZX\hat{b}_{iv}$ (or $y - P_ZX\hat{b}_{iv}$)
+
+Whereas they should be computed as $\hat{u} = y - X\hat{b}_{iv}$
+\end{frame}
+
+\begin{frame}{Exogeneity test (1)}
+\begin{itemize}
+    \item We test $H_0$: $E(X'u) = 0$
+    \item This is called the ``Hausman test'' or ``Durbin-Wu-Hausman test''
+    \item If $H_0$ is true, then both OLS and IV estimators are consistent (and OLS is more precise)
+    \item If $H_0$ is false, only the IV estimator is consistent
+    \item The test is based on the difference between $\hat{b}_{iv}$ and $\hat{b}_{ols}$
+    \item They are asymptotically normal: if we compute the difference between the two, take its quadratic form and ``divide'' it by its variance matrix, we will get a $\chi^2$ distribution
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Exogeneity test (2)}
+One could think that the parameter of this $\chi^2$ is the number of tested variables (those potentially endogenous), just like a Wald test. But looking closely at the test statistic:
+
+\[H = (\hat{b}_{iv} - \hat{b}_{ols})'(V(\hat{b}_{iv}) - V(\hat{b}_{ols}))^{-1}(\hat{b}_{iv} - \hat{b}_{ols})\]
+
+This parameter is in fact equal to the rank of the matrix $V(\hat{b}_{iv}) - V(\hat{b}_{ols})$ (whose inverse is then a generalized inverse).
+
+In finite samples, the estimated difference of variances may not be positive definite, so sometimes the software can't run the test (or finds $H < 0$).
+\end{frame}
+
+\begin{frame}{The augmented regression}
+\begin{itemize}
+    \item Consider model $y = Xb + u$, where a subset $x$ of the variables belonging to $X$ might be endogenous
+    \item Let's call $Z$ the instruments, some belonging to $X$ (in fact the $X$ without the $x$) and some not
+    \item Consider the augmented model: $y = Xb + M_Zxc + \varepsilon$
+    \item $M_Zx$ are the residuals of the regression of $x$ on $Z$
+    \item The $\hat{b}$ of this ``augmented'' regression is equal to the IV estimator of the original model
+    \item Testing $c = 0$ amounts to testing the exogeneity of $x$ (it is equivalent to the Hausman test)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Proofs}
+\begin{itemize}
+    \item $\hat{b}_{aug} = \hat{b}_{iv}$ and equivalence of tests: using the Frisch-Waugh theorem
+    \item Remark: this augmented model has no theoretical meaning, it's only a tool
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Selecting valid instruments}
+Sargan test: $H_0$: $E(Z'u) = 0$
+
+Also called: test of overidentifying restrictions
+
+Under $H_0$:
+
+\[\frac{\hat{u}'P_Z\hat{u}}{s^2} \xrightarrow{d} \chi_{p-k}^2\]
+
+with $\hat{u} = y - X\hat{b}_{iv}$ and $s^2 = \frac{\hat{u}'\hat{u}}{N}$.
+
+$\hat{u}'P_Z\hat{u}$ is the sum of the squared fitted values of the regression of $\hat{u}$ on $Z$ (the statistic is $N R^2$ of this regression).
+
+Remark: when $p = k$, the statistic is always zero because $\hat{b}_{iv} = (Z'X)^{-1}Z'y$ and $Z'\hat{u} = 0$. So we cannot run the test with the minimum number of instruments.
+\end{frame}
+
+\begin{frame}{The problem with weak instruments}
+\begin{itemize}
+    \item If instruments are too weakly correlated with the $X$'s, even if we increase the number of observations, there can be an important bias in estimations
+    \item Plus, the estimator has a non-normal sampling distribution, which makes statistical inference meaningless
+    \item The weak instrument problem is increased with many instruments, so drop the weakest ones and use the most relevant ones
+    \item To measure how instruments are correlated with the potentially endogenous variables, run the first-stage regression explaining the latter by the instruments
+    \item Criterion: the F statistic testing that the \textit{excluded} instruments are jointly zero in the first stage (not the global F): if $F < 10$, instruments are weak (Staiger-Stock rule of thumb)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Returns to education}
+Angrist-Krueger (1991), ``Does Compulsory School Attendance Affect Schooling and Earnings?'', Quarterly Journal of Economics
+
+\begin{itemize}
+    \item Goal: find the causal link between education and wages, knowing that such a wage equation is subject to endogeneity
+    \item In the US, compulsory education starts the year pupils turn 6, and ends when they turn 16
+    \item Pupils born in January begin school at 6 years 8 months old; those born in December, at 5 years 9 months old
+    \item For pupils who stop school at 16, those born in December study almost one year more than those born in January
+    \item Quarter of birth is thus correlated with schooling, but as good as random, so uncorrelated with individual ability: good instrument for schooling
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Quarter of birth and education}
+\begin{center}
+\includegraphics[width=0.8\textwidth]{quarter_birth_education.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Quarter of birth and earnings}
+\begin{center}
+\includegraphics[width=0.8\textwidth]{quarter_birth_earnings.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Results}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{angrist_krueger_results.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Method}
+\begin{itemize}
+    \item Instruments: quarter-of-birth dummies, interacted with year-of-birth (and state-of-birth) dummies
+    \item Result: OLS underestimates the impact of education on earnings
+    \item Caveat: Bound, Jaeger and Baker (1995) showed that with so many weak instruments, 2SLS is biased towards OLS (see weak instruments)
+    \item Even better method: randomized trials
+    \item E.g.\ Moving to Opportunity, RAND Health Insurance Experiment
+    \item Many other methods in policy evaluation: differences-in-differences, matching, etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Are IV estimates reliable?}
+\begin{itemize}
+    \item The goal of IV estimation is to bring to light real causality and not mere correlation between outcome $y$ and explanatory variables $X$
+    \item In treatment evaluation, we want to assess the Average Treatment Effect
+    \item So we instrument the dummy indicating whether the individual received the treatment, because we suspect that taking the treatment is not exogenous: it is likely to be correlated with unobserved heterogeneity
+    \item However, it can be shown that in doing so, we estimate a Local Average Treatment Effect (Imbens and Angrist, 1994), i.e.\ the impact of the treatment only on the individuals for whom the instrument indeed has an impact (called \emph{compliers})
+\end{itemize}
+\end{frame}
+
+\end{document}

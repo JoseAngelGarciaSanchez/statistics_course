@@ -1,0 +1,493 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+% Title page information
+\title{Econometrics}
+\subtitle{Ridge and Lasso Regression}
+\author{Jose Angel Garcia Sanchez}
+\institute{Université Paris 1 Panthéon-Sorbonne}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+% Set the logo
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% ===============================
+% SECTION 1: Introduction to Regularization
+% ===============================
+\section{Introduction to Regularization}
+
+\begin{frame}{Motivation}
+\begin{itemize}
+    \item OLS minimizes the sum of squared residuals: $\min_{\beta} \sum_{i=1}^{n}(y_i - x_i'\beta)^2$
+    \item OLS works well when $n \gg p$ (many observations, few variables)
+    \item But OLS can fail when:
+    \begin{itemize}
+        \item $p$ is large relative to $n$ (high-dimensional data); if $p > n$, $X'X$ is not even invertible
+        \item There is multicollinearity among regressors
+        \item We want to improve out-of-sample prediction
+    \end{itemize}
+    \item Solution: add a \textit{penalty term} to the objective function
+    \item This is called \textit{regularization} or \textit{shrinkage}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Bias-Variance Trade-off}
+\begin{itemize}
+    \item Recall that the Mean Squared Error of an estimator can be decomposed: $MSE = Bias^2 + Variance$
+    \item OLS is unbiased but can have high variance, especially when:
+    \begin{itemize}
+        \item Predictors are highly correlated (multicollinearity)
+        \item The number of predictors is large
+    \end{itemize}
+    \item Regularization introduces some bias but reduces variance
+    \item If the reduction in variance exceeds the increase in squared bias, we get a lower MSE
+    \item This improves prediction accuracy, especially out-of-sample
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The General Penalized Regression Framework}
+\begin{itemize}
+    \item General form: $\min_{\beta} \left\{ \sum_{i=1}^{n}(y_i - x_i'\beta)^2 + \lambda \cdot P(\beta) \right\}$
+    \item $\lambda \geq 0$ is the \textit{tuning parameter} (or regularization parameter)
+    \item $P(\beta)$ is the \textit{penalty function}
+    \item When $\lambda = 0$: we get OLS
+    \item When $\lambda \rightarrow \infty$: all coefficients shrink to zero
+    \item Different choices of $P(\beta)$ give different estimators:
+    \begin{itemize}
+        \item Ridge: $P(\beta) = \sum_{j=1}^{p}\beta_j^2$ (L2 penalty)
+        \item Lasso: $P(\beta) = \sum_{j=1}^{p}|\beta_j|$ (L1 penalty)
+        \item Elastic Net: combination of both
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Important Preliminary: Standardization}
+\begin{itemize}
+    \item Regularization penalizes the size of coefficients
+    \item But coefficient size depends on the scale of variables
+    \item A variable measured in millions will have a tiny coefficient compared to one measured in units
+    \item Solution: \textit{standardize} all variables before estimation
+    \item For each variable $x_j$: $\tilde{x}_j = \frac{x_j - \bar{x}_j}{s_{x_j}}$
+    \item After standardization, all variables have mean 0 and standard deviation 1
+    \item The intercept is typically not penalized
+    \item After estimation, coefficients can be transformed back to the original scale if needed
+\end{itemize}
+\end{frame}
+
+% ===============================
+% SECTION 2: Ridge Regression
+% ===============================
+\section{Ridge Regression}
+
+\begin{frame}{Ridge Regression: Definition}
+\begin{itemize}
+    \item Ridge regression adds an L2 penalty to the OLS objective:
+    \[\hat{\beta}^{Ridge} = \arg\min_{\beta} \left\{ \sum_{i=1}^{n}(y_i - x_i'\beta)^2 + \lambda \sum_{j=1}^{p}\beta_j^2 \right\}\]
+    \item Equivalently, in matrix notation:
+    \[\hat{\beta}^{Ridge} = \arg\min_{\beta} \left\{ (Y - X\beta)'(Y - X\beta) + \lambda \beta'\beta \right\}\]
+    \item The penalty term $\lambda \sum_{j=1}^{p}\beta_j^2$ shrinks coefficients toward zero
+    \item Large coefficients are penalized more heavily (quadratic penalty)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ridge Regression: Closed-Form Solution}
+\begin{itemize}
+    \item Taking the first-order condition:
+    \[\frac{\partial}{\partial \beta}\left[(Y - X\beta)'(Y - X\beta) + \lambda \beta'\beta\right] = 0\]
+    \item We get: $-2X'Y + 2X'X\beta + 2\lambda\beta = 0$
+    \item Solving for $\beta$:
+    \[\hat{\beta}^{Ridge} = (X'X + \lambda I)^{-1}X'Y\]
+    \item Compare with OLS: $\hat{\beta}^{OLS} = (X'X)^{-1}X'Y$
+    \item The term $\lambda I$ is added to $X'X$ before inversion
+    \item This ensures $(X'X + \lambda I)$ is always invertible for $\lambda > 0$, even when $X'X$ is singular
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ridge Regression: Properties (1)}
+\begin{itemize}
+    \item The Ridge estimator is biased: $E(\hat{\beta}^{Ridge}) \neq \beta$
+    \item The bias is: $Bias(\hat{\beta}^{Ridge}) = -\lambda(X'X + \lambda I)^{-1}\beta$
+    \item The variance is: $Var(\hat{\beta}^{Ridge}) = \sigma^2(X'X + \lambda I)^{-1}X'X(X'X + \lambda I)^{-1}$
+    \item As $\lambda$ increases:
+    \begin{itemize}
+        \item Bias increases (coefficients shrink more toward zero)
+        \item Variance decreases (estimates become more stable)
+    \end{itemize}
+    \item There exists an optimal $\lambda^*$ that minimizes MSE, and it is always possible to beat OLS: some $\lambda > 0$ gives a lower MSE than OLS (Hoerl and Kennard, 1970)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ridge Regression: Properties (2)}
+\begin{itemize}
+    \item Ridge does NOT set coefficients exactly to zero
+    \item All predictors remain in the model (no variable selection)
+    \item Ridge is particularly useful when:
+    \begin{itemize}
+        \item Predictors are highly correlated (multicollinearity)
+        \item We believe all predictors are relevant
+        \item We want to stabilize estimates
+    \end{itemize}
+    \item The ridge penalty can be viewed as a Bayesian prior: $\beta \sim N(0, (\sigma^2/\lambda) I)$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ridge Regression: Geometric Interpretation}
+\begin{itemize}
+    \item Ridge regression can be written as a constrained optimization:
+    \[\min_{\beta} \sum_{i=1}^{n}(y_i - x_i'\beta)^2 \quad \text{subject to} \quad \sum_{j=1}^{p}\beta_j^2 \leq t\]
+    \item The constraint region is a ball (a disk in 2 dimensions)
+    \item The OLS solution is at the center of the elliptical contours of the RSS
+    \item The ridge solution is where the elliptical contours first touch the ball
+    \item Because the ball has no corners, the solution typically has all coefficients non-zero
+    \item Smaller $t$ (equivalently, larger $\lambda$) means more shrinkage
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ridge and Multicollinearity}
+\begin{itemize}
+    \item Recall: with perfect multicollinearity, $X'X$ is singular and OLS fails
+    \item With near-perfect multicollinearity, $(X'X)^{-1}$ has very large elements
+    \item This leads to inflated variances and unstable OLS estimates
+    \item Ridge regression solves this by adding $\lambda I$ to $X'X$
+    \item Even if $X'X$ is singular, $(X'X + \lambda I)$ is always invertible for $\lambda > 0$
+    \item The eigenvalues of $(X'X + \lambda I)$ are $d_j + \lambda$, where $d_j$ are the eigenvalues of $X'X$
+    \item Small eigenvalues (source of instability) become at least $\lambda$ instead of nearly zero
+\end{itemize}
+\end{frame}
+
+% ===============================
+% SECTION 3: Lasso Regression
+% ===============================
+\section{Lasso Regression}
+
+\begin{frame}{Lasso Regression: Definition}
+\begin{itemize}
+    \item Lasso = Least Absolute Shrinkage and Selection Operator (Tibshirani, 1996)
+    \item Lasso adds an L1 penalty to the OLS objective:
+    \[\hat{\beta}^{Lasso} = \arg\min_{\beta} \left\{ \sum_{i=1}^{n}(y_i - x_i'\beta)^2 + \lambda \sum_{j=1}^{p}|\beta_j| \right\}\]
+    \item The key difference from Ridge: absolute values instead of squares
+    \item This seemingly small change has profound implications
+    \item Lasso performs both shrinkage AND variable selection
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Lasso: No Closed-Form Solution}
+\begin{itemize}
+    \item Unlike Ridge, Lasso has no closed-form solution
+    \item The absolute value function $|\beta_j|$ is not differentiable at $\beta_j = 0$
+    \item Optimization requires iterative algorithms:
+    \begin{itemize}
+        \item Coordinate descent (most common)
+        \item LARS (Least Angle Regression)
+        \item Proximal gradient methods
+    \end{itemize}
+    \item With an orthonormal design ($X'X = I$), each coefficient is a \textit{soft-thresholding} of the OLS one:
+    \[\hat{\beta}_j^{Lasso} = \text{sign}(\hat{\beta}_j^{OLS})\left(|\hat{\beta}_j^{OLS}| - \lambda/2\right)_+\]
+    \item Where $(x)_+ = \max(0, x)$: small OLS coefficients are set exactly to zero
+    \item Compare Ridge in the same case: $\hat{\beta}_j^{Ridge} = \hat{\beta}_j^{OLS}/(1 + \lambda)$, a proportional shrinkage that never reaches zero
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Lasso: Variable Selection Property}
+\begin{itemize}
+    \item The key feature of Lasso: it sets some coefficients exactly to zero
+    \item This performs automatic variable selection
+    \item As $\lambda$ increases, more coefficients become exactly zero
+    \item The model becomes more sparse (fewer non-zero coefficients)
+    \item This is very useful when:
+    \begin{itemize}
+        \item We have many potential predictors
+        \item We believe only a subset are truly relevant
+        \item We want an interpretable, parsimonious model
+    \end{itemize}
+    \item Lasso identifies which variables matter and estimates their effects simultaneously
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Lasso: Geometric Interpretation}
+\begin{itemize}
+    \item Lasso can be written as a constrained optimization:
+    \[\min_{\beta} \sum_{i=1}^{n}(y_i - x_i'\beta)^2 \quad \text{subject to} \quad \sum_{j=1}^{p}|\beta_j| \leq t\]
+    \item The constraint region is a diamond (or cross-polytope in higher dimensions)
+    \item The diamond has corners on the axes
+    \item The elliptical RSS contours often touch the diamond at a corner
+    \item At a corner, one or more coefficients are exactly zero
+    \item This is why Lasso produces sparse solutions
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Lasso: Properties}
+\begin{itemize}
+    \item The Lasso estimator is biased (like Ridge)
+    \item Lasso is consistent for variable selection under certain conditions
+    \item However, Lasso has some limitations:
+    \begin{itemize}
+        \item With highly correlated predictors, Lasso tends to select one and ignore the others
+        \item When $p > n$, Lasso selects at most $n$ variables
+        \item Lasso estimates for selected variables are biased toward zero
+    \end{itemize}
+    \item These limitations motivate extensions like Elastic Net and Adaptive Lasso
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Comparing Ridge and Lasso}
+\begin{center}
+\begin{tabular}{l|c|c}
+\hline
+Property & Ridge & Lasso \\
+\hline
+Penalty & $\sum \beta_j^2$ (L2) & $\sum |\beta_j|$ (L1) \\
+Closed-form solution & Yes & No \\
+Variable selection & No & Yes \\
+Handles multicollinearity & Yes & Partially \\
+Correlated predictors & Shrinks together & Selects one \\
+When $p > n$ & Works & Selects $\leq n$ \\
+Bayesian interpretation & Normal prior & Laplace prior \\
+\hline
+\end{tabular}
+\end{center}
+\end{frame}
+
+% ===============================
+% SECTION 4: Elastic Net
+% ===============================
+\section{Elastic Net}
+
+\begin{frame}{Elastic Net: Combining Ridge and Lasso}
+\begin{itemize}
+    \item Elastic Net (Zou and Hastie, 2005) combines L1 and L2 penalties:
+    \[\hat{\beta}^{EN} = \arg\min_{\beta} \left\{ \sum_{i=1}^{n}(y_i - x_i'\beta)^2 + \lambda_1 \sum_{j=1}^{p}|\beta_j| + \lambda_2 \sum_{j=1}^{p}\beta_j^2 \right\}\]
+    \item Alternative parameterization with mixing parameter $\alpha \in [0,1]$:
+    \[\hat{\beta}^{EN} = \arg\min_{\beta} \left\{ \sum_{i=1}^{n}(y_i - x_i'\beta)^2 + \lambda \left[ \alpha \sum_{j=1}^{p}|\beta_j| + (1-\alpha) \sum_{j=1}^{p}\beta_j^2 \right] \right\}\]
+    \item $\alpha = 1$: Lasso; $\alpha = 0$: Ridge
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Elastic Net: Properties}
+\begin{itemize}
+    \item Combines the best of both worlds:
+    \begin{itemize}
+        \item Variable selection (from Lasso)
+        \item Grouping effect (from Ridge)
+    \end{itemize}
+    \item With correlated predictors, Elastic Net tends to select groups of correlated variables together
+    \item Can select more than $n$ variables when $p > n$
+    \item Particularly useful when:
+    \begin{itemize}
+        \item Predictors are highly correlated
+        \item We want both sparsity and stability
+        \item The number of predictors exceeds the sample size
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+% ===============================
+% SECTION 5: Choosing the Tuning Parameter
+% ===============================
+\section{Choosing the Tuning Parameter}
+
+\begin{frame}{The Role of $\lambda$}
+\begin{itemize}
+    \item The tuning parameter $\lambda$ controls the amount of regularization
+    \item $\lambda = 0$: no penalty, we get OLS
+    \item $\lambda \rightarrow \infty$: maximum penalty, all coefficients go to zero
+    \item Intermediate $\lambda$: trade-off between bias and variance
+    \item How to choose $\lambda$? Several approaches:
+    \begin{itemize}
+        \item Cross-validation (most common)
+        \item Information criteria (AIC, BIC)
+        \item Theoretical considerations
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cross-Validation (1)}
+\begin{itemize}
+    \item K-fold cross-validation is the standard approach
+    \item Procedure:
+    \begin{enumerate}
+        \item Divide data into $K$ roughly equal parts (folds)
+        \item For each fold $k = 1, \ldots, K$:
+        \begin{itemize}
+            \item Fit the model on all data except fold $k$
+            \item Compute the prediction error on fold $k$
+        \end{itemize}
+        \item Average the $K$ prediction errors
+    \end{enumerate}
+    \item Repeat for a grid of $\lambda$ values
+    \item Choose the $\lambda$ that minimizes the cross-validation error
+    \item Common choices: $K = 5$ or $K = 10$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cross-Validation (2)}
+\begin{itemize}
+    \item The CV error as a function of $\lambda$ typically has a U-shape
+    \item Small $\lambda$: high variance, low bias (overfitting)
+    \item Large $\lambda$: low variance, high bias (underfitting)
+    \item Two common choices:
+    \begin{itemize}
+        \item $\lambda_{min}$: minimizes the CV error
+        \item $\lambda_{1se}$: largest $\lambda$ whose CV error is within 1 standard error of the minimum
+    \end{itemize}
+    \item $\lambda_{1se}$ gives a more parsimonious model (more regularization)
+    \item This is the ``one-standard-error rule''
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Information Criteria}
+\begin{itemize}
+    \item Alternative to cross-validation: use information criteria
+    \item For Lasso, we can use:
+    \begin{itemize}
+        \item AIC: $AIC = n \log(RSS/n) + 2\,df$
+        \item BIC: $BIC = n \log(RSS/n) + \log(n) \cdot df$
+    \end{itemize}
+    \item The degrees of freedom of the Lasso can be estimated by the number of non-zero coefficients
+    \item For Ridge: $df = \sum_{j=1}^{p} \frac{d_j}{d_j + \lambda}$, where $d_j$ are the eigenvalues of $X'X$
+    \item BIC tends to select sparser models than AIC
+    \item Cross-validation is generally preferred in practice
+\end{itemize}
+\end{frame}
+
+% ===============================
+% SECTION 6: Inference and Extensions
+% ===============================
+\section{Inference and Extensions}
+
+\begin{frame}{Inference After Selection}
+\begin{itemize}
+    \item Standard inference (t-tests, confidence intervals) is invalid after Lasso selection
+    \item Why? The selection process introduces additional randomness
+    \item Naive standard errors are too small (underestimate uncertainty)
+    \item Confidence intervals have incorrect coverage
+    \item Several approaches have been developed:
+    \begin{itemize}
+        \item Sample splitting
+        \item Selective inference
+        \item Debiased/Desparsified Lasso
+        \item Bootstrap methods
+        \item Post-double-selection (Belloni, Chernozhukov and Hansen, 2014), for the effect of one variable of interest in the presence of many controls
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Sample Splitting}
+\begin{itemize}
+    \item Simple approach to valid inference:
+    \begin{enumerate}
+        \item Split the sample randomly into two parts
+        \item Use the first part for variable selection (Lasso)
+        \item Use the second part for estimation and inference (OLS on selected variables)
+    \end{enumerate}
+    \item Advantages: simple, valid inference
+    \item Disadvantages:
+    \begin{itemize}
+        \item Loses statistical power (uses only half the data for each step)
+        \item Results depend on the random split
+    \end{itemize}
+    \item Can average over multiple random splits
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Post-Lasso OLS}
+\begin{itemize}
+    \item Also called ``Post-Selection OLS'' or ``OLS post Lasso''
+    \item Procedure:
+    \begin{enumerate}
+        \item Run Lasso to select variables (non-zero coefficients)
+        \item Run OLS using only the selected variables
+    \end{enumerate}
+    \item The OLS estimates are less biased than Lasso estimates
+    \item Removes the shrinkage bias for selected variables
+    \item Caution: standard errors from this OLS are still not valid for inference
+    \item Valid inference requires additional corrections
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Adaptive Lasso}
+\begin{itemize}
+    \item Standard Lasso penalizes all coefficients equally
+    \item This can lead to too much bias for large coefficients
+    \item Adaptive Lasso (Zou, 2006) uses weighted penalties:
+    \[\hat{\beta}^{ALasso} = \arg\min_{\beta} \left\{ \sum_{i=1}^{n}(y_i - x_i'\beta)^2 + \lambda \sum_{j=1}^{p}w_j|\beta_j| \right\}\]
+    \item Weights: $w_j = 1/|\hat{\beta}_j^{init}|^\gamma$ for some initial estimator $\hat{\beta}^{init}$ (e.g.\ OLS or Ridge)
+    \item Typically $\gamma = 1$ or $\gamma = 2$
+    \item Variables with small initial estimates are penalized more
+    \item Under some conditions, Adaptive Lasso has the ``oracle property'': asymptotically, it selects the correct model and estimates its coefficients as if the true model were known
+\end{itemize}
+\end{frame}
+
+% ===============================
+% SECTION 7: Practical Implementation
+% ===============================
+\section{Practical Implementation}
+
+\begin{frame}{Implementation in Software}
+\begin{itemize}
+    \item Ridge and Lasso are implemented in all major statistical software:
+    \begin{itemize}
+        \item R: \texttt{glmnet} package (gold standard)
+        \item Python: \texttt{scikit-learn} (\texttt{Ridge}, \texttt{Lasso}, \texttt{ElasticNet}, and \texttt{RidgeCV}, \texttt{LassoCV}, \texttt{ElasticNetCV} with built-in cross-validation)
+        \item Stata: \texttt{lasso}, \texttt{elasticnet} commands
+    \end{itemize}
+    \item \texttt{glmnet} uses coordinate descent, computes the entire solution path (all values of $\lambda$) efficiently, and standardizes the variables by default
+    \item scikit-learn does \textbf{not} standardize: use \texttt{make\_pipeline(StandardScaler(), LassoCV())}
+    \item scikit-learn calls $\lambda$ \texttt{alpha}, and divides the Lasso and Elastic Net RSS by $2n$: its \texttt{alpha} is $\lambda/(2n)$ in our notation (but $\lambda$ for \texttt{Ridge}); our mixing parameter $\alpha$ is its \texttt{l1\_ratio}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Practical Recommendations}
+\begin{itemize}
+    \item Always standardize predictors before regularization
+    \item Use cross-validation to choose $\lambda$
+    \item Consider the one-standard-error rule for more parsimony
+    \item If predictors are highly correlated, consider Elastic Net
+    \item For inference, use appropriate methods (not naive standard errors)
+    \item Check model performance on held-out test data
+    \item Compare with OLS on a subset of variables (sanity check)
+    \item Remember: regularization is primarily for prediction, not causal inference (unless using methods designed for it, such as post-double-selection)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{When to Use What?}
+\begin{itemize}
+    \item \textbf{OLS}: $n \gg p$, no multicollinearity, focus on inference
+    \item \textbf{Ridge}: multicollinearity, all predictors believed relevant, prediction focus
+    \item \textbf{Lasso}: many predictors, only some believed relevant, want variable selection
+    \item \textbf{Elastic Net}: many correlated predictors, want both selection and grouping
+    \item \textbf{Adaptive Lasso}: want consistent variable selection with oracle properties
+    \item In practice: try several methods and compare via cross-validation
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Summary}
+\begin{itemize}
+    \item Regularization adds a penalty to the OLS objective function
+    \item Ridge (L2): shrinks coefficients, handles multicollinearity, no selection
+    \item Lasso (L1): shrinks and selects variables, produces sparse models
+    \item Elastic Net: combines Ridge and Lasso benefits
+    \item The tuning parameter $\lambda$ is chosen via cross-validation
+    \item Standard inference is invalid after Lasso selection
+    \item These methods are powerful tools for prediction in high-dimensional settings
+    \item But remember: regularization introduces bias, which may not be desirable for causal inference
+\end{itemize}
+\end{frame}
+
+\end{document}

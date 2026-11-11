@@ -1,0 +1,613 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+% Title page information
+\title{Statistics for Applications}
+\subtitle{Sorbonne Data Analytics}
+\author{Jose Angel Garcia Sanchez}
+\institute{Université Paris 1 Panthéon-Sorbonne}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+
+% Set the logo (change filename if needed)
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Section 1: Goals
+\section{Course Goals}
+
+\begin{frame}{Goals}
+\textbf{Goals:}
+\begin{itemize}
+    \item To give you a solid introduction to the mathematical theory behind statistical methods
+    \item To provide theoretical guarantees for the statistical methods that you may use for certain applications
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{At the end of this class, you will be able to:}
+\begin{enumerate}
+    \item From a real-life situation, formulate a statistical problem in mathematical terms
+    \item Select appropriate statistical methods for your problem
+    \item Understand the implications and limitations of various methods
+\end{enumerate}
+\end{frame}
+
+% Section 2: Why Statistics?
+\section{Why Statistics?}
+
+\begin{frame}{Why Statistics?}
+\textbf{Real-world applications across history and disciplines:}
+
+\vspace{0.3cm}
+
+\textbf{Hydrology} (Netherlands, 10th century, building dams and dykes)
+\begin{itemize}
+    \item Should be high enough for most floods
+    \item Should not be too expensive (high)
+\end{itemize}
+
+\textbf{Insurance}
+\begin{itemize}
+    \item Given your driving record, car information, coverage
+    \item What is a fair premium?
+\end{itemize}
+
+\textbf{Clinical trials}
+\begin{itemize}
+    \item A drug is tested on 100 patients; 56 were cured and 44 showed no improvement
+    \item Is the drug effective?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Randomness}
+\textbf{What is common to all these examples?}
+\vspace{5cm}
+\end{frame}
+
+\begin{frame}{Randomness}
+\textbf{What is common to all these examples?}
+\vspace{1cm}
+
+\centering
+{\LARGE \textcolor{sorbonneblue}{\textbf{RANDOMNESS}}}
+
+\vspace{1cm}
+
+\textbf{Associated questions:}
+\begin{itemize}
+    \item Notion of average (``fair premium'', \dots)
+    \item Quantifying chance (``most of the floods'', \dots)
+    \item Significance, variability, \dots
+\end{itemize}
+\end{frame}
+
+% Section 3: Probability vs Statistics
+\section{Probability vs Statistics}
+
+\begin{frame}{Probability}
+\textbf{Probability studies randomness}
+
+Sometimes, the physical process is completely known: dice, cards, roulette, fair coins, \dots
+
+\vspace{0.2cm}
+
+\textbf{Example: Rolling 1 die}
+\begin{itemize}
+    \item Alice gets 1\euro{} if \# of dots $\geq 3$
+    \item Bob gets 2\euro{} if \# of dots $\leq 2$
+    \item Who do you want to be: Alice or Bob?
+\end{itemize}
+
+\textbf{Example: Rolling 2 dice}
+\begin{itemize}
+    \item Choose a number between 2 and 12
+    \item Win 100\euro{} if you chose the sum of the 2 dice
+    \item Which number do you choose?
+\end{itemize}
+
+{\small Well-known random process: 1/6 chance for each side, dice are independent. We can deduce the probability of outcomes and expected gains. This is probability.\par}
+\end{frame}
+
+\begin{frame}{Statistics and Modeling}
+\textbf{How about more complicated processes?}
+\begin{itemize}
+    \item Need to estimate parameters from data. This is statistics
+    \item Sometimes real randomness (random student, biased coin, measurement error, \dots)
+    \item Sometimes deterministic but too complex phenomenon: statistical modeling
+\end{itemize}
+
+\vspace{0.5cm}
+
+\begin{block}{Key Principle}
+Complicated process = Simple process + random noise
+\end{block}
+
+\vspace{0.3cm}
+
+(Good) Modeling consists in choosing a (plausible) simple process and noise distribution.
+\end{frame}
+
+\begin{frame}{Statistics vs. Probability}
+\textbf{Probability:}
+\begin{quote}
+Previous studies showed that the drug was 80\% effective. Then we can anticipate that for a study on 100 patients, on average 80 will be cured, and at least 65 will be cured with 99.99\% chance.
+\end{quote}
+
+\vspace{0.5cm}
+
+\textbf{Statistics:}
+\begin{quote}
+Observe that 78/100 patients were cured. We (will be able to) conclude that we are 95\% confident that for other studies the drug will be effective on between 69.88\% and 86.12\% of patients.
+\end{quote}
+\end{frame}
+
+% Section 4: Practical Example - Kissing Study
+\section{A Practical Example}
+
+\begin{frame}{Heuristics (1)}
+\begin{alertblock}{Study Claim}
+``A neonatal right-side preference makes a surprising romantic reappearance later in life.''
+\end{alertblock}
+
+\vspace{0.3cm}
+
+\begin{itemize}
+    \item Let $p$ denote the proportion of couples that turn their head to the right when kissing
+    \item Let us design a statistical experiment and analyze its outcome
+    \item Observe $n$ kissing couples and collect the value of each outcome (say 1 for RIGHT and 0 for LEFT)
+    \item Estimate $p$ with the proportion $\hat{p}$ of RIGHT
+    \item Study: ``Human behaviour: Adult persistence of head-turning asymmetry'' (Güntürkün, Nature, 2003): $n = 124$, 80 to the right so $\hat{p} = \frac{80}{124} = 64.5\%$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Heuristics (2)}
+\textbf{Back to the data:}
+\begin{itemize}
+    \item 64.5\% is much larger than 50\% so there seems to be a preference for turning right
+    \item What if our data was RIGHT, RIGHT, LEFT ($n = 3$). That's 66.7\% to the right. Even better?
+    \item Intuitively, we need a large enough sample size $n$ to make a call. How large?
+\end{itemize}
+
+\vspace{1cm}
+
+\begin{block}{Key Point}
+We need mathematical modeling to understand the accuracy of this procedure
+\end{block}
+\end{frame}
+
+\begin{frame}{Heuristics (3)}
+\textbf{Formally, this procedure consists of doing the following:}
+\begin{itemize}
+    \item For $i = 1, \ldots, n$, define $R_i = 1$ if the $i$th couple turns to the right, $R_i = 0$ otherwise
+    \item The estimator of $p$ is the sample average
+    \[\hat{p} = \bar{R}_n = \frac{1}{n}\sum_{i=1}^{n}R_i\]
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{What is the accuracy of this estimator?}
+
+\vspace{0.3cm}
+
+In order to answer this question, we propose a statistical model that describes/approximates well the experiment.
+\end{frame}
+
+\begin{frame}{Heuristics (4)}
+\textbf{Coming up with a model consists of making assumptions on the observations $R_i$, $i = 1, \ldots, n$ in order to draw statistical conclusions.}
+
+\vspace{0.5cm}
+
+\textbf{Here are the assumptions we make:}
+\begin{enumerate}
+    \item Each $R_i$ is a random variable
+    \item Each of the r.v. $R_i$ is Bernoulli with parameter $p$
+    \item $R_1, \ldots, R_n$ are mutually independent
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Heuristics (5)}
+\textbf{Let us discuss these assumptions:}
+
+\vspace{0.3cm}
+
+\textbf{1. Randomness} is a way of modeling lack of information; with perfect information about the conditions of kissing (including what goes on in the kissers' minds), physics or sociology would allow us to predict the outcome.
+
+\vspace{0.3cm}
+
+\textbf{2. Bernoulli distribution:} The $R_i$'s are necessarily Bernoulli r.v. since $R_i \in \{0, 1\}$. They could have different parameters $R_i \sim \text{Ber}(p_i)$ for each couple but we don't have enough information to estimate the $p_i$'s accurately. So we assume: $p_i = p$ for all $i$.
+
+\vspace{0.3cm}
+
+\textbf{3. Independence} is reasonable (people were observed at different locations and different times).
+\end{frame}
+
+% Section 5: Mathematical Tools
+\section{Mathematical Tools}
+
+\begin{frame}{Two Important Tools: LLN \& CLT}
+Let $X, X_1, X_2, \ldots, X_n$ be i.i.d. r.v., $\mu = \mathbb{E}[X]$ and $\sigma^2 = \text{Var}[X] < \infty$.
+
+\vspace{0.5cm}
+
+\textbf{Laws of Large Numbers (weak and strong):}
+\[\bar{X}_n := \frac{1}{n}\sum_{i=1}^{n}X_i \xrightarrow{\mathbb{P}, \text{a.s.}} \mu\]
+
+\vspace{0.5cm}
+
+\textbf{Central Limit Theorem:}
+\[\sqrt{n}\frac{\bar{X}_n - \mu}{\sigma} \xrightarrow{(d)} N(0, 1)\]
+
+(Equivalently, $\sqrt{n}(\bar{X}_n - \mu) \xrightarrow{(d)} N(0, \sigma^2)$)
+\end{frame}
+
+\begin{frame}{Consequences (1)}
+\begin{itemize}
+    \item The LLN's tell us that
+    \[\bar{R}_n \xrightarrow{\mathbb{P}, \text{a.s.}} p\]
+
+    \item Hence, when the size $n$ of the experiment becomes large, $\bar{R}_n$ is a good (we say ``consistent'') estimator of $p$
+
+    \item The CLT refines this by quantifying how good this estimate is
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequences (2)}
+Let $\Phi(x)$: cdf of $N(0, 1)$; $\Phi_n(x)$: cdf of $\sqrt{n}\frac{\bar{R}_n - p}{\sqrt{p(1-p)}}$.
+
+\vspace{0.3cm}
+
+CLT: $\Phi_n(x) \approx \Phi(x)$ when $n$ becomes large. Hence, for all $x > 0$,
+
+\[\mathbb{P}\left[|\bar{R}_n - p| \leq x\sqrt{\frac{p(1-p)}{n}}\right] \approx 2\Phi(x) - 1\]
+\end{frame}
+
+\begin{frame}{Consequences (3)}
+\textbf{Consequences:}
+\begin{itemize}
+    \item Approximation on how $\bar{R}_n$ concentrates around $p$
+    \item For a fixed $\alpha \in (0, 1)$, if $q_{\alpha/2}$ is the $(1 - \alpha/2)$-quantile of $N(0, 1)$, then with probability $\approx 1 - \alpha$ (if $n$ is large enough!),
+\end{itemize}
+
+\[p \in \left[\bar{R}_n - q_{\alpha/2}\sqrt{\frac{p(1-p)}{n}}, \bar{R}_n + q_{\alpha/2}\sqrt{\frac{p(1-p)}{n}}\right]\]
+\end{frame}
+
+\begin{frame}{Consequences (4)}
+\begin{itemize}
+    \item Note that no matter the (unknown) value of $p$,
+    \[p(1-p) \leq 1/4\]
+
+    \item Hence, when $n$ becomes large, the interval
+    \[\left[\bar{R}_n - \frac{q_{\alpha/2}}{2\sqrt{n}}, \bar{R}_n + \frac{q_{\alpha/2}}{2\sqrt{n}}\right]\]
+    contains $p$ with probability at least $\approx 1 - \alpha$ (it is wider than the interval of the previous slide)
+
+    \item This interval is called an \textbf{asymptotic confidence interval} for $p$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequences (5)}
+\textbf{In the kiss example, we get:}
+\[0.645 \pm \frac{1.96}{2\sqrt{124}} = [0.56, 0.73]\]
+
+\vspace{0.5cm}
+
+In the extreme case ($n = 3$) we would get $[0.10, 1.23]$, which even goes above 1: the CLT is not valid for such a small $n$! Actually, we can make exact computations.
+\end{frame}
+
+\begin{frame}{Another Useful Tool: Hoeffding's Inequality}
+\textbf{What if $n$ is not so large?}
+
+\vspace{0.3cm}
+
+\begin{block}{Hoeffding's Inequality (i.i.d. case)}
+Let $n$ be a positive integer and $X, X_1, \ldots, X_n$ be i.i.d. r.v. such that $X \in [a, b]$ a.s. ($a < b$ are given numbers). Let $\mu = \mathbb{E}[X]$. Then, for all $\lambda > 0$,
+\[\mathbb{P}[|\bar{X}_n - \mu| \geq \lambda] \leq 2e^{-\frac{2n\lambda^2}{(b-a)^2}}\]
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{Consequence:} For $\alpha \in (0, 1)$, with probability $\geq 1 - \alpha$,
+\[\bar{R}_n - \sqrt{\frac{\log(2/\alpha)}{2n}} \leq p \leq \bar{R}_n + \sqrt{\frac{\log(2/\alpha)}{2n}}\]
+
+This holds even for small sample sizes $n$.
+\end{frame}
+
+% Section 6: Convergence
+\section{Types of Convergence}
+
+\begin{frame}{Review of Different Types of Convergence (1)}
+Let $(T_n)_{n\geq 1}$ be a sequence of r.v. and $T$ a r.v. ($T$ may be deterministic).
+
+\vspace{0.5cm}
+
+\textbf{Almost sure (a.s.) convergence:}
+\[T_n \xrightarrow{\text{a.s.}} T \text{ iff } \mathbb{P}[\{\omega : T_n(\omega) \to T(\omega)\}] = 1\]
+
+\vspace{0.5cm}
+
+\textbf{Convergence in probability:}
+\[T_n \xrightarrow{\mathbb{P}} T \text{ iff } \mathbb{P}[|T_n - T| \geq \lambda] \to 0, \; \forall \lambda > 0\]
+\end{frame}
+
+\begin{frame}{Review of Different Types of Convergence (2)}
+\textbf{Convergence in $L^p$ ($p \geq 1$):}
+\[T_n \xrightarrow{L^p} T \text{ iff } \mathbb{E}[|T_n - T|^p] \to 0\]
+
+\vspace{0.5cm}
+
+\textbf{Convergence in distribution:}
+\[T_n \xrightarrow{(d)} T \text{ iff } \mathbb{P}[T_n \leq x] \to \mathbb{P}[T \leq x]\]
+for all $x \in \mathbb{R}$ at which the cdf of $T$ is continuous.
+
+\vspace{0.5cm}
+
+\begin{block}{Remark}
+These definitions extend to random vectors (i.e., random variables in $\mathbb{R}^d$ for some $d \geq 2$).
+\end{block}
+\end{frame}
+
+\begin{frame}{Review of Different Types of Convergence (3)}
+\textbf{Important characterizations of convergence in distribution}
+
+\vspace{0.3cm}
+
+The following propositions are equivalent:
+\begin{enumerate}
+    \item[(i)] $T_n \xrightarrow{(d)} T$
+    \item[(ii)] $\mathbb{E}[f(T_n)] \to \mathbb{E}[f(T)]$, for all continuous and bounded functions $f$
+    \item[(iii)] $\mathbb{E}[e^{ixT_n}] \to \mathbb{E}[e^{ixT}]$, for all $x \in \mathbb{R}$
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Review of Different Types of Convergence (4)}
+\textbf{Important properties:}
+\begin{itemize}
+    \item If $(T_n)_{n\geq 1}$ converges a.s., then it also converges in probability, and the two limits are equal a.s.
+
+    \item If $(T_n)_{n\geq 1}$ converges in $L^p$, then it also converges in $L^q$ for all $1 \leq q \leq p$ and in probability, and the limits are equal a.s.
+
+    \item If $(T_n)_{n\geq 1}$ converges in probability, then it also converges in distribution
+
+    \item If $f$ is a continuous function (continuous mapping theorem):
+    \[T_n \xrightarrow{\text{a.s.}/\mathbb{P}/(d)} T \Rightarrow f(T_n) \xrightarrow{\text{a.s.}/\mathbb{P}/(d)} f(T)\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Review of Different Types of Convergence (5)}
+\textbf{Limits and operations}
+
+\vspace{0.3cm}
+
+One can add, multiply, \dots\ limits almost surely and in probability. If $U_n \xrightarrow{\text{a.s.}/\mathbb{P}} U$ and $V_n \xrightarrow{\text{a.s.}/\mathbb{P}} V$, then:
+\begin{itemize}
+    \item $U_n + V_n \xrightarrow{\text{a.s.}/\mathbb{P}} U + V$
+    \item $U_nV_n \xrightarrow{\text{a.s.}/\mathbb{P}} UV$
+    \item If in addition, $V \neq 0$ a.s., then $\frac{U_n}{V_n} \xrightarrow{\text{a.s.}/\mathbb{P}} \frac{U}{V}$
+\end{itemize}
+
+\vspace{0.3cm}
+
+\begin{alertblock}{Warning}
+In general, these rules do not apply to convergence in distribution unless the pair $(U_n, V_n)$ converges in distribution to $(U, V)$.
+\end{alertblock}
+\end{frame}
+
+% Section 7: Another Example - Metro Arrivals
+\section{Another Example}
+
+\begin{frame}{Another Example (1)}
+\textbf{Scenario:}
+\begin{itemize}
+    \item You observe the times between arrivals of the metro at a given station: $T_1, \ldots, T_n$
+    \item You assume that these times are:
+    \begin{itemize}
+        \item Mutually independent
+        \item Exponential random variables with common parameter $\lambda > 0$
+    \end{itemize}
+    \item You want to estimate the value of $\lambda$, based on the observed arrival times
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Another Example (2)}
+\textbf{Discussion of the assumptions:}
+
+\vspace{0.3cm}
+
+\textbf{Mutual independence of $T_1, \ldots, T_n$:} plausible but not completely justified (often the case with independence).
+
+\vspace{0.3cm}
+
+\textbf{$T_1, \ldots, T_n$ are exponential r.v.:} lack of memory of the exponential distribution:
+\[\mathbb{P}[T_1 > t + s \mid T_1 > t] = \mathbb{P}[T_1 > s], \; \forall s,t \geq 0\]
+Also, $T_i > 0$ almost surely!
+
+\vspace{0.3cm}
+
+\textbf{Same parameter:} on average, the same inter-arrival time. True only for a limited period (rush hour $\neq$ 11pm).
+\end{frame}
+
+\begin{frame}{Another Example (3)}
+\begin{itemize}
+    \item Density of $T_1$: $f(t) = \lambda e^{-\lambda t}$, $\forall t \geq 0$
+
+    \item $\mathbb{E}[T_1] = \frac{1}{\lambda}$
+
+    \item Hence, a natural estimate of $\frac{1}{\lambda}$ is
+    \[\bar{T}_n := \frac{1}{n}\sum_{i=1}^{n}T_i\]
+
+    \item A natural estimator of $\lambda$ is
+    \[\hat{\lambda} := \frac{1}{\bar{T}_n}\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Another Example (4)}
+\begin{itemize}
+    \item By the LLN's,
+    \[\bar{T}_n \xrightarrow{\text{a.s.}/\mathbb{P}} \frac{1}{\lambda}\]
+
+    \item Hence (continuous mapping, $x \mapsto 1/x$),
+    \[\hat{\lambda} \xrightarrow{\text{a.s.}/\mathbb{P}} \lambda\]
+
+    \item By the CLT,
+    \[\sqrt{n}\left(\bar{T}_n - \frac{1}{\lambda}\right) \xrightarrow{(d)} N(0, \lambda^{-2})\]
+
+    \item How does the CLT transfer to $\hat{\lambda}$? How to find an asymptotic confidence interval for $\lambda$?
+\end{itemize}
+\end{frame}
+
+% Section 8: Delta Method
+\section{The Delta Method}
+
+\begin{frame}{The Delta Method}
+Let $(Z_n)_{n\geq 1}$ be a sequence of r.v. that satisfies
+\[\sqrt{n}(Z_n - \theta) \xrightarrow{(d)} N(0, \sigma^2)\]
+for some $\theta \in \mathbb{R}$ and $\sigma^2 > 0$ (the sequence $(Z_n)_{n\geq 1}$ is said to be asymptotically normal around $\theta$).
+
+\vspace{0.3cm}
+
+Let $g : \mathbb{R} \to \mathbb{R}$ be continuously differentiable at the point $\theta$.
+
+\vspace{0.3cm}
+
+\textbf{Then:}
+\begin{itemize}
+    \item $(g(Z_n))_{n\geq 1}$ is also asymptotically normal
+    \item More precisely,
+    \[\sqrt{n}(g(Z_n) - g(\theta)) \xrightarrow{(d)} N(0, (g'(\theta))^2\sigma^2)\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequence of the Delta Method (1)}
+\begin{itemize}
+    \item With $g(x) = 1/x$ and $g'(1/\lambda) = -\lambda^2$: $\sqrt{n}(\hat{\lambda} - \lambda) \xrightarrow{(d)} N(0, \lambda^2)$
+
+    \item Hence, for $\alpha \in (0, 1)$ and when $n$ is large enough, with probability $\approx 1 - \alpha$,
+    \[|\hat{\lambda} - \lambda| \leq \frac{q_{\alpha/2}\lambda}{\sqrt{n}}\]
+
+    \item Can $\left[\hat{\lambda} - \frac{q_{\alpha/2}\lambda}{\sqrt{n}}, \hat{\lambda} + \frac{q_{\alpha/2}\lambda}{\sqrt{n}}\right]$ be used as an asymptotic confidence interval for $\lambda$?
+
+    \item No! It depends on $\lambda$, which is unknown
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequence of the Delta Method (2)}
+\textbf{Two ways to overcome this issue:}
+
+\vspace{0.3cm}
+
+\textbf{1. Solve for $\lambda$} (assuming $\sqrt{n} > q_{\alpha/2}$)\textbf{:}
+\[|\hat{\lambda} - \lambda| \leq \frac{q_{\alpha/2}\lambda}{\sqrt{n}} \Leftrightarrow \lambda\left(1 - \frac{q_{\alpha/2}}{\sqrt{n}}\right) \leq \hat{\lambda} \leq \lambda\left(1 + \frac{q_{\alpha/2}}{\sqrt{n}}\right)\]
+
+\[\Leftrightarrow \hat{\lambda}\left(1 + \frac{q_{\alpha/2}}{\sqrt{n}}\right)^{-1} \leq \lambda \leq \hat{\lambda}\left(1 - \frac{q_{\alpha/2}}{\sqrt{n}}\right)^{-1}\]
+
+Hence, $\left[\hat{\lambda}\left(1 + \frac{q_{\alpha/2}}{\sqrt{n}}\right)^{-1}, \hat{\lambda}\left(1 - \frac{q_{\alpha/2}}{\sqrt{n}}\right)^{-1}\right]$ is an asymptotic confidence interval for $\lambda$.
+
+\vspace{0.3cm}
+
+\textbf{2. A systematic way:} Slutsky's theorem.
+\end{frame}
+
+% Section 9: Slutsky's Theorem
+\section{Slutsky's Theorem}
+
+\begin{frame}{Slutsky's Theorem}
+\begin{block}{Slutsky's Theorem}
+Let $(X_n)$, $(Y_n)$ be two sequences of r.v., such that:
+\begin{itemize}
+    \item[(i)] $X_n \xrightarrow{(d)} X$
+    \item[(ii)] $Y_n \xrightarrow{\mathbb{P}} c$
+\end{itemize}
+where $X$ is a r.v. and $c$ is a given real number. Then,
+\[(X_n, Y_n) \xrightarrow{(d)} (X, c)\]
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{In particular:}
+\begin{itemize}
+    \item $X_n + Y_n \xrightarrow{(d)} X + c$
+    \item $X_nY_n \xrightarrow{(d)} cX$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequence of Slutsky's Theorem (1)}
+\begin{itemize}
+    \item Thanks to the Delta method, we know that
+    \[\sqrt{n}\frac{\hat{\lambda} - \lambda}{\lambda} \xrightarrow{(d)} N(0, 1)\]
+
+    \item By the weak LLN (and continuous mapping),
+    \[\hat{\lambda} \xrightarrow{\mathbb{P}} \lambda\]
+
+    \item Hence, by Slutsky's theorem (multiplying by $\lambda/\hat{\lambda} \xrightarrow{\mathbb{P}} 1$),
+    \[\sqrt{n}\frac{\hat{\lambda} - \lambda}{\hat{\lambda}} \xrightarrow{(d)} N(0, 1)\]
+
+    \item Another asymptotic confidence interval for $\lambda$ is
+    \[\left[\hat{\lambda} - \frac{q_{\alpha/2}\hat{\lambda}}{\sqrt{n}}, \hat{\lambda} + \frac{q_{\alpha/2}\hat{\lambda}}{\sqrt{n}}\right]\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consequence of Slutsky's Theorem (2)}
+\textbf{Remark:}
+\begin{itemize}
+    \item In the first example (kisses), we used a problem-dependent trick: ``$p(1-p) \leq 1/4$''
+
+    \item We could have used Slutsky's theorem to get the asymptotic confidence interval
+    \[\left[\bar{R}_n - q_{\alpha/2}\sqrt{\frac{\bar{R}_n(1-\bar{R}_n)}{n}}, \bar{R}_n + q_{\alpha/2}\sqrt{\frac{\bar{R}_n(1-\bar{R}_n)}{n}}\right]\]
+\end{itemize}
+\end{frame}
+
+% Conclusion
+\section{Conclusion}
+
+\begin{frame}{Summary}
+\textbf{Key concepts covered:}
+\begin{itemize}
+    \item Statistical thinking: from real-world problems to mathematical formulations
+    \item Difference between probability and statistics
+    \item Practical examples: kissing study and metro arrivals
+    \item Mathematical tools: LLN, CLT, Hoeffding's inequality
+    \item Types of convergence and their properties
+    \item Delta method and Slutsky's theorem
+    \item Confidence intervals and their construction
+\end{itemize}
+
+\begin{block}{Next Steps}
+Apply these tools to more complex problems and understand their limitations.
+\end{block}
+\end{frame}
+
+\begin{frame}{}
+\centering
+\vspace{1cm}
+
+{\Large \textcolor{sorbonneblue}{\textbf{Thank you for your attention!}}}
+
+\vspace{1cm}
+
+\includegraphics[height=2.5cm]{imagen.png}
+
+\vspace{1cm}
+
+{\large Questions?}
+
+\vspace{0.5cm}
+
+{\small Jose Angel Garcia Sanchez | Université Paris 1 Panthéon-Sorbonne\par}
+\end{frame}
+
+\end{document}

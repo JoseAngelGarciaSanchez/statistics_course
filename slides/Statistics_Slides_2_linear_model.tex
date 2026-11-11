@@ -1,0 +1,750 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Use Sorbonne theme
+\usepackage{sorbonne_theme}
+
+% Title page information
+\title{Econometrics Part 1}
+\subtitle{The linear model: presentation}
+\author{Jose Angel Garcia Sanchez}
+\institute{Université Paris 1 Panthéon-Sorbonne}
+\date{} % left empty on purpose: beamer would otherwise print today's date
+
+% Set the logo
+\sorbonnelogo{imagen.png}
+
+\begin{document}
+
+% Title page (without logo in corner)
+{
+\setbeamertemplate{logo}{}
+\begin{frame}
+\titlepage
+\end{frame}
+}
+
+% Table of contents
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% Section 1
+\section{Introduction}
+
+\begin{frame}{Topics addressed}
+\begin{itemize}
+    \item Linear regression
+    \item Heteroskedasticity and autocorrelation
+    \item Instrumental Variables
+    \item Simultaneous Equations
+    \item Panel Data
+    \item Discrete choice
+    \item Censored variables
+    \item Time series
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Econometrics}
+\begin{itemize}
+    \item Economic analysis relies on theoretical representations of behaviors and mechanisms (e.g.\ macro-economic models, the Capital Asset Pricing Model, etc.)
+    \item The relevance of these models should be tested on real data (e.g.\ does the CAPM ``work''?)
+    \item Parameters of interest should be assessed too (e.g.\ what is the impact of a rise in oil prices or interest rates on car sales?)
+    \item Econometrics uses statistical tools to provide an answer to these questions
+    \item Here, theoretical and hands-on econometrics: How to manage real data? How to find the best model? Did I get what I expected? Can I trust this model?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Example}
+Consider an individual consumption function: for each individual $i$, we observe consumption $C_i$ and income $I_i$. A very simple model explaining $C_i$ would be:
+
+\[\forall i, \quad C_i = a + bI_i\]
+
+The goal of econometrics would be to test the relevance of this model (is it a \textit{good approximation} of reality?), to provide \textit{estimates} of parameters $a$ and $b$ and to assess the accuracy of these estimates (inference: tests). Plus, one may be concerned that the link between $C$ and $I$ is not that perfect.
+\end{frame}
+
+\begin{frame}{Types of datasets}
+\begin{itemize}
+    \item \textit{Cross-sectional data}: individual data collected at a particular point in time (e.g.\ census data on individuals, households, firms)
+    \item \textit{Time series data}: variables collected over time (e.g.\ yearly GDP, monthly unemployment rate)
+    \item \textit{Panel data}: individual data collected over time (e.g.\ Medical Expenditure Panel Survey)
+\end{itemize}
+
+\vspace{0.5cm}
+
+Cross-sectional data and panel data are collected not at the \textit{population} level, but on a \textit{sample}, representative of the population. We thus have to infer the characteristics of the population from the information we get from that particular sample.
+\end{frame}
+
+\begin{frame}{Variables}
+\begin{itemize}
+    \item Quantitative variables are measured on a numeric or quantitative scale: income, age, \dots
+    \item Qualitative variables are not: gender, region, \dots, but need to be coded with numbers anyway (\textit{dummy variables})
+\end{itemize}
+
+\vspace{0.5cm}
+
+Consider model $\forall i$, $C_i = a + bI_i$
+\begin{itemize}
+    \item $C_i$: the endogenous (\textit{or} dependent \textit{or} explained) variable, which is the one explained by the model
+    \item $I_i$ and the constant: exogenous (\textit{or} independent \textit{or} explanatory) variables that determine the endogenous variable
+\end{itemize}
+\end{frame}
+
+% Section 2
+\section{The simple linear model}
+
+\begin{frame}{The simple linear model: example}
+Say we'd like to know about the health care habits of the French population. Assume that for each individual $i$, health care expenditure $y_i$ could be explained by age $x_i$, in a linear way:
+
+\[\forall i, \quad y_i = b_0 + b_1x_i\]
+
+For a newborn, expenditure would be $b_0$, and each additional year would incur $b_1$ extra cost. This makes sense, since we all know that health expenditure increases with age. This is a simple model because we have only one explanatory variable.
+\end{frame}
+
+\begin{frame}{Error term - linearity}
+Of course, the link between age and expenditure cannot be that perfect, so we add an \textbf{error term} $u_i$ that accounts for unobserved factors that make this relation not perfect (frailty, income, etc.).
+
+\[\forall i, \quad y_i = b_0 + b_1x_i + u_i\]
+
+This is a (simple) model of individual health care expenditure. This is how we believe the data was generated in the first place. Its relevance cannot be assessed on the whole population, but rather on a sample, say of size $N$. The model can be estimated using ordinary least squares (OLS), if some assumptions are satisfied. Notice that this is a linear model because parameters (and not necessarily variables) enter it in a linear way.
+\end{frame}
+
+\begin{frame}{Example}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{education_wage_plot.png}
+\end{center}
+
+Source: \texttt{http://www.statcrunch.com/}
+\end{frame}
+
+\begin{frame}{The simple linear model: assumptions}
+Let's call $i$ an individual from the size $N$ sample.
+
+\[\forall i, \quad y_i = b_0 + b_1x_i + u_i\]
+
+Calling $E$ the expected value and $V$ the variance, the usual and so-called \textit{Gauss-Markov assumptions} for such a model are:
+
+\begin{enumerate}
+    \item $\forall i$, $E(u_i|X) = 0$
+    \item $u$ and $x$ are uncorrelated
+    \item $\hat{V}(x) \neq 0$
+    \item $\forall i$, $V(u_i) = \sigma^2$
+    \item $\forall i \neq j$, $\operatorname{cov}(u_i, u_j) = 0$
+\end{enumerate}
+
+Everything is conditional on $X$; we don't write it every time for simplicity.
+\end{frame}
+
+\begin{frame}{What they mean}
+\begin{enumerate}
+    \item We want the model to predict the right outcome, given any $x$:\\
+    $\forall i$, $E(y_i|x_i) = E(b_0 + b_1x_i + u_i|x_i) =$\\
+    $E(b_0 + b_1x_i|x_i) + E(u_i|x_i) = b_0 + b_1E(x_i|x_i) = b_0 + b_1x_i$
+    \item $u$ should be totally random: no way to guess $u$ from $X$
+    \item The $x_i$ can't all be the same
+    \item The variance of the error term should be the same for all individuals of the sample (\textit{homoskedasticity})
+    \item The error terms of different individuals should be uncorrelated (\textit{no autocorrelation})
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Reminder (1): E and V}
+\begin{itemize}
+    \item $E(X)$ is the \textit{expected value} of $X$: theoretical mean
+    \item $\bar{X}$ is the \textit{average} of observed $X$: empirical mean
+    \item $V(X)$ is the \textit{variance} of $X$: how we expect $X$ to vary around its mean (theoretical)
+    \item $V(X) = E((X - E(X))^2)$
+    \item $\hat{V}(X)$ is the \textit{empirical variance} of $X$: how $X$ indeed varies around its mean
+    \item $\hat{V}(X) = \frac{\sum_{i=1}^{N}(X_i - \bar{X})^2}{N}$
+    \item To get an unbiased estimator of $V(X)$, there is a minor adjustment: we divide by $(N-1)$ instead of $N$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Reminder (2): Conditioning}
+\begin{itemize}
+    \item Earlier, we wrote: $E(y_i|x_i) = E(b_0 + b_1x_i + u_i|x_i)$
+    \item Say $y$ is income and $x$ is gender: 0 for males, 1 for females
+    \item Expected income for a male, i.e.\ knowing $x = 0$:\\
+    $E(y_i|x_i = 0) = b_0 + b_1 \times 0 = b_0$
+    \item Expected income for a female, i.e.\ knowing $x = 1$:\\
+    $E(y_i|x_i = 1) = b_0 + b_1 \times 1 = b_0 + b_1$
+    \item So $b_0$ is the expected male income, $b_0 + b_1$ is the expected female income, and $b_1$ is the expected difference
+    \item $\Rightarrow E(y_i|x_i)$ is used to predict individuals' outcomes, given their characteristics
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Reminder (3): Conditioning}
+\begin{itemize}
+    \item Without conditioning on $x$, this would be:\\
+    $E(y_i) = E(b_0 + b_1x_i + u_i) = b_0 + b_1E(x_i)$
+    \item $E(x_i)$ is the expected proportion of females in the population
+    \item So $E(y_i)$ is the average income over the whole population, i.e.\ the weighted average of males' and females' incomes
+    \item $\Rightarrow E(y_i)$ is used to predict the overall average outcome
+    \item Usually, people discuss $E(y_i)$ while implicitly discussing $E(y_i|x_i)$ instead, because the latter is more informative
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interpretation of parameters}
+Say we have the following model:
+
+\[\forall i, \quad y_i = a + bx_i + u_i\]
+
+Then $b$ can be interpreted as the marginal change in $y$ when $x$ increases by 1 unit since, thanks to assumption 1 ($E(u|x) = 0$), we have:
+
+\[\frac{\partial E(y|x)}{\partial x} = b\]
+
+The linear model is in fact more general than it looks (see the next slides).
+\end{frame}
+
+\begin{frame}{Example: squared variables}
+The following model is linear, even if variable $x$ is squared:
+
+\[y_i = a + bx_i^2 + u_i\]
+
+And a way to understand how $y$ changes with $x$ is to compute the following derivative (let's drop $i$'s for convenience):
+
+\[\frac{dy}{dx} = 2bx\]
+
+And we see it is not constant: it depends on the value of $x$. The relationship between $x$ and $y$ is not a line but a curve. It is even better to put both $x$ and $x^2$ in the equation to allow for more flexibility, which is what is done in practice:
+
+\[y_i = a + bx_i + cx_i^2 + u_i \qquad \text{with} \qquad \frac{dy}{dx} = b + 2cx\]
+\end{frame}
+
+\begin{frame}{Example: logs (1)}
+\begin{itemize}
+    \item Let's have a simple model: $\forall i$, $\log(y_i) = a + bx_i + u_i$
+    \item How can we interpret $b$? (let's drop $i$'s for convenience)
+    \item Taking the exponential: $y = \exp(a + bx + u)$
+\end{itemize}
+
+\[\frac{dy}{dx} = b\exp(a + bx + u) = by\]
+
+\[\frac{dy/y}{dx} = b\]
+
+$100 \times b$ is thus interpreted as the \textbf{percentage} of variation of $y$ when $x$ increases by 1 unit (approximately, for small $b$). This kind of model has a \textit{semi-log} form.
+\end{frame}
+
+\begin{frame}{Example: logs (2)}
+\begin{itemize}
+    \item Let's have a simple model: $\forall i$, $\log(y_i) = a + b\log(x_i) + u_i$
+    \item How can we interpret $b$?
+    \item Taking the exponential: $y = \exp(a + b\log(x) + u)$
+\end{itemize}
+
+\[\frac{dy}{dx} = b\frac{1}{x}\exp(a + b\log(x) + u) = b\frac{y}{x}\]
+
+\[\frac{dy/y}{dx/x} = b\]
+
+$b$ is thus interpreted as an \textbf{elasticity}: the \% of variation of $y$ when $x$ increases by 1\%. This kind of model has a \textit{log-log} form.
+\end{frame}
+
+\begin{frame}{How to choose?}
+\begin{itemize}
+    \item Using economic theory, common sense, plots, \dots
+    \item Example: the link between income and medical expenditures using the World Bank's 1997 Vietnam Living Standards Survey (source: Cameron \& Trivedi, chapter 4)
+    \item Model: \textit{medical expenditures} $= a + b \cdot \textit{income} + u$
+    \item Data: 5,999 households
+    \item Total household income is usually not well captured in developing countries, so we use total household expenditure as a \textit{proxy}
+\end{itemize}
+\end{frame}
+
+% Section 3
+\section{OLS estimation}
+
+\begin{frame}{Our goal: estimate the parameters of the model}
+\[\forall i, \quad y_i = b_0 + b_1x_i + u_i\]
+
+\begin{itemize}
+    \item $b_0$ and $b_1$ are unknown
+    \item We thus want to find the best estimates for them: $\hat{b}_0$ and $\hat{b}_1$
+    \item One way of doing this is by using ordinary least squares: OLS
+    \item $\hat{b}_0 + \hat{b}_1x_i$ should be as close as possible to $y_i$
+    \item We define $\hat{y}_i$ as the model prediction of $y_i$: $\hat{y}_i = \hat{b}_0 + \hat{b}_1x_i$
+    \item And we define $\hat{u}_i$ as $y_i - \hat{y}_i$: the residuals
+    \item Warning: $u$ (unobserved error terms) and $\hat{u}$ (residuals) are two different things
+\end{itemize}
+\end{frame}
+
+\begin{frame}{OLS estimators}
+\begin{itemize}
+    \item We want the residuals to be as small as possible overall: this will give us the optimal $\hat{b}_0$ and $\hat{b}_1$
+    \item But the residuals are known only once the regression line is drawn, which requires $\hat{b}_0$ and $\hat{b}_1$: so we express the residuals as a function of $\hat{b}_0$ and $\hat{b}_1$
+    \item Since residuals can be either positive or negative, we minimize the sum of \textbf{squared} residuals with respect to $\hat{b}_0$ and $\hat{b}_1$:
+\end{itemize}
+
+\[\min_{\hat{b}_0, \hat{b}_1} \sum \hat{u}_i^2 = \min_{\hat{b}_0, \hat{b}_1} \sum(y_i - \hat{y}_i)^2 = \min_{\hat{b}_0, \hat{b}_1} \sum(y_i - \hat{b}_0 - \hat{b}_1x_i)^2\]
+
+And the solution is (proof below):
+
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2} \qquad \text{and} \qquad \hat{b}_0 = \bar{y} - \hat{b}_1\bar{x}\]
+\end{frame}
+
+\begin{frame}{Remark}
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2} = \frac{s_{xy}}{s_{xx}}\]
+
+\begin{itemize}
+    \item $s_{xx} = \frac{1}{N}\sum(x_i - \bar{x})^2$ is the empirical variance of $x$
+    \item $s_{xy} = \frac{1}{N}\sum(x_i - \bar{x})(y_i - \bar{y})$ is the empirical covariance between $x$ and $y$
+    \item So that:
+\end{itemize}
+
+\[\hat{b}_1 = \frac{\widehat{\operatorname{cov}}(x,y)}{\hat{V}(x)}\]
+
+\begin{itemize}
+    \item Warning: correlation $\neq$ causality
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Proof (1)}
+Calling $S(\hat{b}_0, \hat{b}_1) = \sum \hat{u}_i^2$, we need the two First Order Conditions:
+
+\[\frac{\partial S}{\partial \hat{b}_0} = 0 \Rightarrow -2\sum_{i=1}^{N}(y_i - \hat{b}_0 - \hat{b}_1x_i) = 0 \quad (1)\]
+
+\[\frac{\partial S}{\partial \hat{b}_1} = 0 \Rightarrow -2\sum_{i=1}^{N}x_i(y_i - \hat{b}_0 - \hat{b}_1x_i) = 0 \quad (2)\]
+
+Since the function is convex (strictly, as long as the $x_i$ are not all equal) and twice differentiable, we don't really need the Second Order Conditions: we know in advance that the minimum exists and is unique.
+\end{frame}
+
+\begin{frame}{Proof (2)}
+Equation 1 implies:
+
+\[\sum y_i = N\hat{b}_0 + \hat{b}_1 \sum x_i \quad (3)\]
+
+We divide everything by $N$, use the empirical means $\bar{y} = \frac{\sum y_i}{N}$ and $\bar{x} = \frac{\sum x_i}{N}$, and get:
+
+\[\bar{y} = \hat{b}_0 + \hat{b}_1\bar{x} \quad (4)\]
+
+$\Rightarrow$ the regression line goes through the sample mean $(\bar{x}, \bar{y})$\\
+(= the average person)\\
+$\Rightarrow$ the average residual is always 0 (this is equation 1)
+\end{frame}
+
+\begin{frame}{Proof (3)}
+Thanks to equation 4, we get $\hat{b}_0 = \bar{y} - \hat{b}_1\bar{x}$, and we plug in $\bar{y} - \hat{b}_1\bar{x}$ instead of $\hat{b}_0$ in equation 2:
+
+\[\sum x_i(y_i - \bar{y} + \hat{b}_1\bar{x} - \hat{b}_1x_i) = 0 \quad (5)\]
+
+\[\sum x_i(y_i - \bar{y}) = \hat{b}_1 \sum x_i(x_i - \bar{x}) \quad (6)\]
+
+Since $\sum \bar{x}(y_i - \bar{y}) = 0$ and $\sum \bar{x}(x_i - \bar{x}) = 0$, we can replace $x_i$ by $(x_i - \bar{x})$ in front:
+
+\[\hat{b}_1 = \frac{\sum x_i(y_i - \bar{y})}{\sum x_i(x_i - \bar{x})} = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2} \quad (7)\]
+\end{frame}
+
+\begin{frame}{The OLS estimator is linear}
+We have:
+
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2}\]
+
+So:
+
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})y_i}{\sum(x_i - \bar{x})^2} = \sum \frac{(x_i - \bar{x})}{\sum(x_i - \bar{x})^2}y_i\]
+
+Estimate $\hat{b}_1$ is thus a linear combination of elements $y_i$ (with weights that only depend on the $x$'s), and can also be written as a linear combination of elements $u_i$, since $y_i = b_0 + b_1x_i + u_i$.
+\end{frame}
+
+\begin{frame}{Are all observations given the same weight?}
+We have:
+
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2}\]
+
+So:
+
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})^2 \frac{(y_i-\bar{y})}{(x_i-\bar{x})}}{\sum(x_i - \bar{x})^2} = \sum p_i\frac{(y_i - \bar{y})}{(x_i - \bar{x})}\]
+
+Calling $p_i = \frac{(x_i - \bar{x})^2}{\sum(x_i - \bar{x})^2}$.
+
+$\frac{(y_i-\bar{y})}{(x_i-\bar{x})}$ is the slope of the line drawn from the point corresponding to individual $i$ to the sample average, and $p_i$ is an increasing function of $|x_i - \bar{x}|$.
+
+Estimate $\hat{b}_1$ is thus highly influenced by points with extreme $x$ values (see Anscombe's quartet: four datasets with the same regression line).
+\end{frame}
+
+\begin{frame}{OLS estimators are ``BLUE''}
+\[\forall i, \quad y_i = b_0 + b_1x_i + u_i\]
+
+\begin{itemize}
+    \item OLS estimators are the Best Linear Unbiased Estimators (BLUE): this is the \textit{Gauss-Markov theorem}, which is valid under the \textit{Gauss-Markov assumptions} seen earlier
+    \item They are linear in $y_i$, as seen earlier
+    \item $\hat{b}_0$ and $\hat{b}_1$ are particular outcomes of random variables (their expression comprises $y$, which in turn comprises $u$), so we can compute their expected value and variance
+    \item Unbiased: $E(\hat{b}_0) = b_0$, $E(\hat{b}_1) = b_1$
+    \item ``Best'' means they have a minimal variance among unbiased linear estimators
+    \item All this is true whatever the size of the sample
+    \item Proof: in the general case with more than one $x$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The variance of estimators: summary}
+\begin{itemize}
+    \item Recall that $V(u_i) = \sigma^2$
+    \item $V(\hat{b}_1) = \frac{\sigma^2}{\sum(x_i - \bar{x})^2}$, \quad $V(\hat{b}_0) = \frac{\sigma^2}{N} + \bar{x}^2 V(\hat{b}_1)$, \quad $\operatorname{cov}(\hat{b}_0, \hat{b}_1) = -\bar{x}V(\hat{b}_1)$
+    \item To get an estimate of these variances, we need an unbiased estimator of $\sigma^2$: $\hat{\sigma}^2 = \frac{\sum \hat{u}_i^2}{N - 2}$
+    \item Indeed, $\hat{V}(\hat{u}) = \frac{\sum(\hat{u}_i - \bar{\hat{u}})^2}{N} = \frac{\sum \hat{u}_i^2}{N}$
+    \item And we need a small correction to make it an unbiased estimator of $V(u)$: divide by $N - 2$ instead of $N$
+    \item This is because we lose 2 degrees of freedom, since there are 2 parameters to estimate in the model (proof in the general case)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{OLS estimators: summary}
+In model $y_i = b_0 + b_1x_i + u_i$:
+
+\[\hat{b}_1 = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2}\]
+
+and
+
+\[\hat{b}_0 = \bar{y} - \hat{b}_1\bar{x}\]
+
+\begin{itemize}
+    \item Unbiased: $E(\hat{b}_0) = b_0$ and $E(\hat{b}_1) = b_1$
+    \item Smallest variance among linear unbiased estimators: $V(\hat{b}_1) = \frac{\sigma^2}{\sum(x_i - \bar{x})^2}$ where $\sigma^2 = V(u_i)$
+    \item Sensitive to extreme values
+\end{itemize}
+\end{frame}
+
+% Section 4
+\section{Distribution and asymptotics}
+
+\begin{frame}{OLS estimators: distribution}
+\begin{itemize}
+    \item OLS estimators are a linear combination of $u_i$'s
+    \item If we had a large sample, we could rely on the Central Limit Theorem to learn about the distribution of estimators (see below)
+    \item But for any sample size, the only way to know the distribution of estimators is to assume we know the distribution of the $u_i$'s
+    \item A common assumption is that $u_i \hookrightarrow N(0, \sigma^2)$
+    \item It implies that both OLS estimators follow a normal distribution:\\
+    $\hat{b}_0 \hookrightarrow N(b_0, \sigma_{\hat{b}_0}^2)$ and $\hat{b}_1 \hookrightarrow N(b_1, \sigma_{\hat{b}_1}^2)$
+    \item Next, we'll check how these estimators behave with a large sample size
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Asymptotics: a preview}
+\begin{itemize}
+    \item Do OLS estimators have good properties when the sample size goes to infinity, i.e.\ ``asymptotically''?
+    \item Let's call $(\hat{b}_{0,N})$ and $(\hat{b}_{1,N})$ the sequences of estimators computed on a sample of size $N$
+    \item $(\hat{b}_{0,N})$ and $(\hat{b}_{1,N})$ \textit{converge in probability} towards $b_0$ and $b_1$
+    \item Definition of convergence in probability: $(X_t)$ converges in probability towards $a$ if and only if:\\
+    $\forall \varepsilon > 0$, $P(|X_t - a| > \varepsilon) \to 0$ when $t \to +\infty$
+    \item It means that when the sample size goes to infinity, the probability that the estimates are further than any given distance $\varepsilon$ from the true parameters goes to 0
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Additional assumption needed (1)}
+To prove this convergence, we need to assume that variable $x$ follows this rule:
+
+\[\lim_{N\to\infty} \frac{1}{N}\sum(x_i - \bar{x})^2 = \sigma_x^2 \neq 0\]
+
+Which simply means that the empirical variance of $x$ should have a given limit which is not zero. If it were zero, then it would mean that when we increase the sample size, after a while variable $x$ wouldn't vary anymore (it would stick to its average $\bar{x}$), so additional $x$'s wouldn't provide any information.
+\end{frame}
+
+\begin{frame}{Additional assumption needed (2)}
+\begin{itemize}
+    \item In fact, the only thing we need here is that the $x$'s keep some variance when the sample size goes to infinity, which is very likely to happen
+    \item We also need the variance of $x$ not to go to infinity, which is related to the \textit{stationarity}\footnote{This part of the course focuses on micro data; stationarity is related to Time Series, covered later on} of the $x$'s, so sometimes a weaker condition is used: $\lim_{N\to\infty} \sum(x_i - \bar{x})^2 = \infty$
+    \item This weaker condition is enough for consistency, since $V(\hat{b}_1) = \frac{\sigma^2}{\sum(x_i - \bar{x})^2} \to 0$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Consistency}
+\begin{itemize}
+    \item Convergence in quadratic mean $\Rightarrow$ Convergence in probability
+    \item Definition: a sequence of random variables $(X_t)$ converges in quadratic mean towards $a$ iff:
+    \item $E[(X_t - a)^2] \to 0$ when $t \to \infty$
+    \item Definition: $(X_t)$ converges in probability towards $a$ iff:
+    \item $\forall \varepsilon > 0$, $P(|X_t - a| > \varepsilon) \to 0$ when $t \to \infty$
+\end{itemize}
+
+It means that we only need to prove that OLS estimators converge in \textit{quadratic mean} towards their ``true counterparts'' to prove they are consistent. Since they are unbiased, $E[(\hat{b}_1 - b_1)^2] = V(\hat{b}_1)$: we only need to prove that their variance goes to zero when the sample size goes to infinity (easier).
+\end{frame}
+
+\begin{frame}{Asymptotics}
+\begin{itemize}
+    \item Estimators are consistent, but can we know their distribution?
+    \item Since estimators depend on error terms, if we don't know the distribution of the error terms, we won't know the distribution of estimators in finite samples
+    \item But estimators are a linear combination of the error terms: thanks to the CLT\footnote{Central Limit Theorem}, $\hat{b}_0$ and $\hat{b}_1$ are asymptotically normal
+    \item So if the sample size goes to infinity (= with a sample ``large enough''), we know the distribution of estimators, so we may compute confidence intervals, run tests, etc.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Central Limit Theorem (CLT)}
+(Lindeberg-Feller version)
+
+\begin{itemize}
+    \item Assume we have a sequence of independent random variables $(z_1, z_2, \dots, z_N)$ with finite expectations and variances: $\forall i$, $E(z_i) = \mu_i$ and $V(z_i) = \sigma_i^2$
+    \item They can have different expectations and variances, and don't need to share the same distribution
+    \item Call $\bar{z}_N = \frac{1}{N}\sum_{i=1}^{N} z_i$ and $\bar{\mu}_N = \frac{1}{N}\sum_{i=1}^{N} \mu_i$
+    \item Assume $\bar{\sigma}_N^2 = \frac{1}{N}\sum_{i=1}^{N} \sigma_i^2$ and $\lim_{N\to\infty} \bar{\sigma}_N^2 = \bar{\sigma}^2 > 0$
+    \item Plus a technical condition (Lindeberg's condition): no single $z_i$ dominates the total variance
+    \item Then: $\sqrt{N}(\bar{z}_N - \bar{\mu}_N)$ converges in distribution towards $N(0, \bar{\sigma}^2)$, when $N \to \infty$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Asymptotic results}
+Using the CLT and focusing on parameter $\hat{b}_1$, we get:
+
+\begin{itemize}
+    \item $\sqrt{N}(\hat{b}_1 - b_1) \xrightarrow{d} N\left(0, \frac{\sigma^2}{\sigma_x^2}\right)$
+    \item $\sigma^2$ is the variance of error terms $u$
+    \item $\sigma_x^2$ is the asymptotic variance of $x$
+    \item ``Inflating'' by $\sqrt{N}$ is needed, otherwise the limit would be degenerate (zero variance)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Summary: distribution of estimators}
+\begin{itemize}
+    \item When the sample size is large, OLS estimators become (approximately) Normal thanks to the Central Limit Theorem (CLT) if error terms are \textit{iid}, whatever their distribution, because estimators are a linear combination of error terms
+    \item When the sample size is not so large, estimators are Normal \textit{only if} error terms are normal themselves, because these estimators are a linear combination of the error terms
+    \item Knowing the distribution of estimators helps to draw inference (confidence intervals, tests, etc.)
+\end{itemize}
+\end{frame}
+
+% Section 5
+\section{Goodness of fit}
+
+\begin{frame}{A measure of the ``goodness of fit'' of the regression}
+We call the $R^2$ or \textit{coefficient of determination}:
+
+\[R^2 = \frac{\sum(\hat{y}_i - \bar{y})^2}{\sum(y_i - \bar{y})^2}\]
+
+\begin{itemize}
+    \item It is the ratio of the \textit{variance of the outcome explained by the model} over the \textit{total variance of the outcome}, and lies between 0 (very poor fit) and 1 (perfect fit)
+    \item Formal derivation of the $R^2$ will be given in the more general case of the multiple linear model, as well as the conditions under which it can be used
+    \item Warning: if the $x$ variable is a good predictor of $y$, but if the link is not linear, the $R^2$ will be low because of the lack of fit and not because of the poor choice of variables
+\end{itemize}
+\end{frame}
+
+% Section 6
+\section{The multiple linear model}
+
+\begin{frame}{The multiple linear model}
+Say we get back to the simple model explaining health care expenditures by age, and we want to add various other explanatory variables to the model (income, household size, etc.): $x_2, x_3, \dots, x_{k-1}$
+
+\[\forall i, \quad y_i = b_0 + b_1x_{i,1} + b_2x_{i,2} + b_3x_{i,3} + \dots + b_{k-1}x_{i,k-1} + u_i \quad (8)\]
+
+This is a (less simple) model of individual health care expenditure. It can be rewritten the following way, for individuals $i = 1$ to $N$:
+
+\begin{align*}
+y_1 &= b_0 + b_1x_{1,1} + b_2x_{1,2} + b_3x_{1,3} + \dots + b_{k-1}x_{1,k-1} + u_1\\
+y_2 &= b_0 + b_1x_{2,1} + b_2x_{2,2} + b_3x_{2,3} + \dots + b_{k-1}x_{2,k-1} + u_2\\
+&\;\;\vdots\\
+y_N &= b_0 + b_1x_{N,1} + b_2x_{N,2} + b_3x_{N,3} + \dots + b_{k-1}x_{N,k-1} + u_N
+\end{align*}
+\end{frame}
+
+\begin{frame}{Multiple linear model: matrix notation}
+This system of equations can be rewritten using simple vectors:
+
+\[\begin{pmatrix} y_1 \\ y_2 \\ \vdots \\ y_N \end{pmatrix} = b_0 \begin{pmatrix} 1 \\ 1 \\ \vdots \\ 1 \end{pmatrix} + b_1 \begin{pmatrix} x_{1,1} \\ x_{2,1} \\ \vdots \\ x_{N,1} \end{pmatrix} + \dots + b_{k-1} \begin{pmatrix} x_{1,k-1} \\ x_{2,k-1} \\ \vdots \\ x_{N,k-1} \end{pmatrix} + \begin{pmatrix} u_1 \\ u_2 \\ \vdots \\ u_N \end{pmatrix} \quad (9)\]
+
+And also in a more compact way, using matrices:
+
+\[\begin{pmatrix} y_1 \\ y_2 \\ \vdots \\ y_N \end{pmatrix} = \begin{pmatrix} 1 & x_{1,1} & x_{1,2} & \cdots & x_{1,k-1} \\ 1 & x_{2,1} & x_{2,2} & \cdots & x_{2,k-1} \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ 1 & x_{N,1} & x_{N,2} & \cdots & x_{N,k-1} \end{pmatrix} \begin{pmatrix} b_0 \\ b_1 \\ \vdots \\ b_{k-1} \end{pmatrix} + \begin{pmatrix} u_1 \\ u_2 \\ \vdots \\ u_N \end{pmatrix} \quad (10)\]
+
+Rewritten: $y_{(N,1)} = X_{(N,k)} b_{(k,1)} + u_{(N,1)}$
+\end{frame}
+
+\begin{frame}{Some notations}
+For a random vector such as the estimator $\hat{b}$:
+
+\[E(\hat{b}) = \begin{pmatrix} E(\hat{b}_0) \\ E(\hat{b}_1) \\ \vdots \\ E(\hat{b}_{k-1}) \end{pmatrix} \quad (11) \qquad\qquad V(\hat{b}) = E[(\hat{b} - E(\hat{b}))(\hat{b} - E(\hat{b}))'] \quad (12)\]
+
+\[V(\hat{b}) = \begin{pmatrix} V(\hat{b}_0) & \operatorname{cov}(\hat{b}_0, \hat{b}_1) & \cdots & \operatorname{cov}(\hat{b}_0, \hat{b}_{k-1}) \\ \operatorname{cov}(\hat{b}_1, \hat{b}_0) & V(\hat{b}_1) & \cdots & \operatorname{cov}(\hat{b}_1, \hat{b}_{k-1}) \\ \vdots & \vdots & \ddots & \vdots \\ \operatorname{cov}(\hat{b}_{k-1}, \hat{b}_0) & \operatorname{cov}(\hat{b}_{k-1}, \hat{b}_1) & \cdots & V(\hat{b}_{k-1}) \end{pmatrix} \quad (13)\]
+
+And notice that, for a non-random matrix $A$: $E(AZ) = A\,E(Z)$ but $V(AZ) = A\,V(Z)\,A'$
+\end{frame}
+
+\begin{frame}{Usual assumptions of the model}
+These are the same as for the simple model, but generalized to any number of explanatory variables:
+
+\begin{enumerate}
+    \item $E(u|X) = 0$
+    \item $X$ and $u$ are uncorrelated
+    \item $\operatorname{rank}(X) = k$ with $k < N$
+    \item $E(uu') = \sigma^2I_N$
+    \item When $N \to \infty$, $\lim\frac{X'X}{N} = V_X$ where $V_X$ is a finite non-singular matrix
+\end{enumerate}
+
+(2): consider for now that $X$ is deterministic; we'll consider the more general case later. (3): the rank of a matrix is the maximum number of linearly independent columns: no perfect multicollinearity. (4): homoskedasticity and no autocorrelation. (5): a non-singular matrix has an inverse; the variance of the $X$'s is always non-zero.
+\end{frame}
+
+% Section 7
+\section{OLS in the multiple linear model}
+
+\begin{frame}{Estimation process (1)}
+\begin{itemize}
+    \item OLS minimizes the sum of squared residuals, each one called $\hat{u}_i$
+    \item Calling $\hat{u}$ the vector of residuals, this sum can be written as: $S = \sum \hat{u}_i^2 = \hat{u}'\hat{u}$
+    \item The derivative of $S$ with respect to the vector of parameters $\hat{b}$ should be zero, for this vector of parameters to give an optimum for $S$
+    \item Plus, the second derivative should be positive for this optimum to be a minimum
+    \item We just need to compute the derivatives of $S$ with respect to every single $\hat{b}_j$, and set them to 0
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The gradient}
+In fact, we take the derivative of a number with respect to a vector, and get the vector $G$ of derivatives, called the \textit{gradient}:
+
+\[G = \partial S/\partial \hat{b} = \begin{pmatrix} \partial S/\partial\hat{b}_0 \\ \partial S/\partial\hat{b}_1 \\ \vdots \\ \partial S/\partial\hat{b}_{k-1} \end{pmatrix} \quad (14)\]
+
+After some calculus, we get (proof below):
+
+\[\hat{b} = (X'X)^{-1}X'y \quad (15)\]
+\end{frame}
+
+\begin{frame}{Optimization process (1)}
+We know that since $\hat{u} = y - \hat{y} = y - X\hat{b}$, then:
+
+\begin{align*}
+S &= \hat{u}'\hat{u}\\
+&= (y - X\hat{b})'(y - X\hat{b})\\
+&= (y' - \hat{b}'X')(y - X\hat{b})\\
+&= y'y - y'X\hat{b} - \hat{b}'X'y + \hat{b}'X'X\hat{b}\\
+&= y'y - 2y'X\hat{b} + \hat{b}'X'X\hat{b}
+\end{align*}
+
+Indeed, $y'X\hat{b}$ and $\hat{b}'X'y$ are each other's transpose, but they both are only scalars (matrix of size one by one), and a scalar and its transpose are the same thing.
+\end{frame}
+
+\begin{frame}{Optimization process (2)}
+We can now compute the gradient $G$:
+
+\begin{align*}
+G &= \frac{\partial S}{\partial \hat{b}}\\
+&= \frac{\partial(y'y)}{\partial \hat{b}} - \frac{\partial(2y'X\hat{b})}{\partial \hat{b}} + \frac{\partial(\hat{b}'X'X\hat{b})}{\partial \hat{b}}\\
+&= 0 - 2X'y + 2X'X\hat{b}
+\end{align*}
+
+Since $y$ is not a function of $\hat{b}$. We look for an optimum, so we want $G = 0$, which implies that $\hat{b} = (X'X)^{-1}X'y$ (given that $(X'X)^{-1}$ exists, which follows from the fact that $\operatorname{rank}(X) = k$).
+\end{frame}
+
+\begin{frame}{Optimization process (3)}
+\begin{itemize}
+    \item We also need the second derivative of $S$ to be positive, which in the matrix framework amounts to having the matrix of second derivatives \textit{positive definite}
+    \item This matrix of second derivatives is equal to $\frac{\partial(-2X'y+2X'X\hat{b})}{\partial \hat{b}'} = 2X'X$, which is indeed positive definite
+    \item Reminder: a matrix $A$ is positive definite if for any non-zero vector $z$ of convenient size, $z'Az > 0$. So let's check this with our matrix $2X'X$
+    \item We only need to check that $X'X$ is positive definite. For any non-zero vector $z$, $z'(X'X)z = (Xz)'(Xz)$: a sum of squares, equal to the squared norm (=length) of vector $Xz$, which is $> 0$ since $Xz \neq 0$ (because $\operatorname{rank}(X) = k$)
+\end{itemize}
+\end{frame}
+
+% Section 8
+\section{Geometry of OLS}
+
+\begin{frame}{Geometrical interpretation of OLS (1)}
+See Wooldridge's \textit{Introductory Econometrics}, Appendix E
+
+\begin{itemize}
+    \item In the minimization process, we got to a point where:\\
+    $G = -2X'y + 2X'X\hat{b} = 0$
+    \item Rewritten:\\
+    $X'y - X'X\hat{b} = X'(y - X\hat{b}) = X'(y - \hat{y}) = X'\hat{u} = 0$
+    \item Which means that $\hat{u}$ should be perpendicular to every column vector of matrix $X$, i.e.\ perpendicular to the vector space spanned by the column vectors of $X$
+    \item Condition $X'\hat{u} = 0$ is called the \textit{system of normal equations} (\textit{normal} also means perpendicular)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Illustration}
+Assume variable $y$ is explained by 2 variables, a constant and $x$:\\
+$y = \beta_0 + \beta_1x + u$
+
+OLS will find parameters $\hat{\beta}_0$ and $\hat{\beta}_1$ such that the model prediction $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1x$ is as close as possible to the true $y$.
+
+\begin{center}
+\includegraphics[width=0.5\textwidth]{ols_projection.png}
+\end{center}
+
+The vertical dashed line is vector $\hat{u}$ such that $y = \hat{y} + \hat{u}$. So we may find $\hat{\beta}$ starting directly from $X'\hat{u} = 0$ (normal equations)
+
+Source: \texttt{https://sakai.unc.edu/}
+\end{frame}
+
+\begin{frame}{Geometrical interpretation of OLS (2)}
+\begin{itemize}
+    \item Notice that $\hat{y} = X\hat{b} = X(X'X)^{-1}X'y = P_Xy$
+    \item Where: $P_X = X(X'X)^{-1}X'$
+    \item Matrix $P_X$ is in fact the general form of a projection matrix, which projects orthogonally on $L(X)$ (vector space spanned by the columns of $X$)
+    \item Prediction $\hat{y}$ is the orthogonal projection of $y$ on $L(X)$
+    \item Let's call $M_X = I - P_X$, with $I$ the identity matrix of convenient size
+    \item $M_X$ is a sort of complement to $P_X$
+    \item $M_X$ projects orthogonally on $L^{\perp}(X)$, the vector space orthogonal to $L(X)$
+    \item We can see that the residual is $\hat{u} = M_Xy$
+    \item Notice too that $y = \hat{y} + \hat{u} = P_Xy + M_Xy$: $y$ can be split into 2 orthogonal parts
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Projectors}
+For any orthogonal projection matrix $P_X$, we have:
+
+\begin{itemize}
+    \item $P_XP_X = P_X$: $P_X$ is idempotent
+    \item $P_X' = P_X$: $P_X$ is symmetric
+\end{itemize}
+
+And some additional properties: $P_X + M_X = I$; $P_XM_X = 0$;\\
+$P_XX = X$; $M_XX = 0$. The eigenvalues of a projection matrix are equal either to 1 (corresponding to the vector space it projects onto) or 0 (corresponding to its orthogonal complement). For instance, $P_X$ has $k$ eigenvalues equal to 1 and $N - k$ eigenvalues equal to 0.
+
+(\textit{From a geometrical point of view, OLS estimation is simply a projection.})
+\end{frame}
+
+% Section 9
+\section{Analysis of variance and the \texorpdfstring{$R^2$}{R2}}
+
+\begin{frame}{Consequence: analysis of variance and $R^2$}
+\begin{itemize}
+    \item Vector $y$ can be split in two orthogonal parts: $y = \hat{y} + \hat{u}$
+    \item Thanks to the Pythagorean theorem (proof below), if the model has a constant:
+    \item $\hat{V}(y) = \hat{V}(\hat{y}) + \hat{V}(\hat{u})$
+    \item The coefficient of determination is: $R^2 = \hat{V}(\hat{y})/\hat{V}(y)$
+    \item $R^2$ represents the percentage of variance explained by the model
+    \item But adding a variable, even if it is irrelevant, will artificially increase the $R^2$
+    \item For models with a different number of explanatory variables, only the $\bar{R}^2$'s can be compared
+    \item Adjusted $R^2$: $\bar{R}^2 = 1 - \frac{N-1}{N-k}(1 - R^2)$ (warning: can be negative \dots)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Proof}
+\begin{itemize}
+    \item Call $e_N$ the size $N$ vector of 1's (the constant in the model), and subtract $\bar{y}e_N$ on both sides of $y = \hat{y} + \hat{u}$:\quad $y - \bar{y}e_N = (\hat{y} - \bar{y}e_N) + \hat{u}$
+    \item $\hat{y} - \bar{y}e_N$ and $\hat{u}$ are orthogonal because $\hat{y} \perp \hat{u}$ and $e_N \perp \hat{u}$ (since $e_N$ is a column of $X$ and $X'\hat{u} = 0$)
+    \item So we can apply the Pythagorean theorem:
+    \[\|y - \bar{y}e_N\|^2 = \|\hat{y} - \bar{y}e_N\|^2 + \|\hat{u}\|^2\]
+    \item Since $\hat{u}$ averages to 0, the mean of $\hat{y}$ is $\bar{y}$, so this is equivalent to:
+    \[\textstyle\sum(y_i - \bar{y})^2 = \sum(\hat{y}_i - \bar{\hat{y}})^2 + \sum(\hat{u}_i - \bar{\hat{u}})^2\]
+    \item Dividing by $N$: $\hat{V}(y) = \hat{V}(\hat{y}) + \hat{V}(\hat{u})$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The $R^2$}
+\begin{align*}
+R^2 &= \frac{\sum(\hat{y}_i - \bar{y})^2}{\sum(y_i - \bar{y})^2} = \frac{\text{Explained sum of squares}}{\text{Total sum of squares}} = \frac{\hat{V}(\hat{y})}{\hat{V}(y)}\\
+&= 1 - \frac{\sum \hat{u}_i^2}{\sum(y_i - \bar{y})^2} = 1 - \frac{\text{Sum of squared residuals}}{\text{Total sum of squares}} = 1 - \frac{\hat{V}(\hat{u})}{\hat{V}(y)}
+\end{align*}
+\end{frame}
+
+\begin{frame}{Interpretations of the $R^2$}
+\begin{itemize}
+    \item $R^2$ represents the percentage of variance explained by the model
+    \item It thus represents how well the model fits the data
+    \item If there is a true relationship between the variables \textit{but} this relationship is in fact non-linear, the $R^2$ will be rather low
+    \item The $R^2$ is the square of the \textit{multiple correlation coefficient} between $y$ and the $X$'s
+    \item The $R^2$ is equal to the square of the linear correlation coefficient between $y$ and its prediction $\hat{y}$
+    \item If there is no constant in the model, the usual $R^2$ is meaningless (it can even be negative): statsmodels then reports an ``uncentered'' $R^2$
+    \item The $R^2$ is not enough to assess the relevance of a regression: we'll need statistical tests (see later)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remarks (1)}
+\begin{itemize}
+    \item $R^2$ and adjusted $R^2$ are valid only when comparing models that have the same dependent variable
+    \item So they are inappropriate to compare 2 models with $y$ and $\log(y)$ as the dependent variable
+    \item Why: $R^2$ is a percentage of the variance of the outcome, so we can't compare percentages of different things
+    \item See the PE test (MacKinnon, White and Davidson, 1983) to compare models in logs vs.\ levels (see Verbeek)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Remarks (2)}
+What happens to the $R^2$ if we add an irrelevant explanatory variable to the model?
+
+\begin{itemize}
+    \item $\hat{y}$ is the orthogonal projection of $y$ on $L(X)$
+    \item If $X$ is ``larger'' because we have one more explanatory variable, then $\hat{y}$ cannot be worse than before
+    \item Either there is no improvement to the projection, or there is a small improvement due to randomness
+    \item So the $R^2$ never decreases: it can only increase
+    \item So don't rely on the $R^2$ only to judge a model
+\end{itemize}
+\end{frame}
+
+\end{document}
