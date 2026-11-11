@@ -233,7 +233,7 @@ Réestimez le modèle en niveau sur les données \textbf{non nettoyées} (avant 
 
 % ------------------------------------------------------------------ 4
 \section{Tests et inférence}
-Travaillez avec votre modèle log-log de la section~2.
+Travaillez avec le modèle log-log que vous avez retenu à la section~2 (avec la spécification de l'année de construction choisie en 2.4), auquel vous ajoutez \var{Teletravail\_jours}.
 \begin{enumerate}
   \item Testez l'hypothèse que la consommation est proportionnelle à la surface (élasticité égale à 1).
   \item Testez l'hypothèse que le télétravail \textbf{augmente} la consommation. Quelle est la $p$-valeur du test unilatéral ?
@@ -322,7 +322,7 @@ Les locataires rénovent beaucoup moins que les propriétaires. Pourquoi ? (Qui 
 \section{Régularisation}
 
 \begin{afaire}
-\textbf{Important :} avant d'appliquer Ridge ou Lasso, standardisez toutes les variables explicatives (moyenne 0, écart-type 1), car la pénalité dépend de l'échelle des coefficients. Variable dépendante : $\log(\var{Conso\_kWh})$. Variables explicatives : toutes les variables de la feuille \var{Logements} (sauf \var{ID} et les deux instruments), avec les indicatrices de chauffage et de période de construction.
+\textbf{Important :} avant d'appliquer Ridge ou Lasso, standardisez toutes les variables explicatives (moyenne 0, écart-type 1), car la pénalité dépend de l'échelle des coefficients. Variable dépendante : $\log(\var{Conso\_kWh})$. Variables explicatives : toutes les variables de la feuille \var{Logements} (sauf \var{ID} et les deux instruments), avec \var{Surface\_m2}, \var{DJU} et \var{Revenu\_kEUR} en logarithme, et les indicatrices de chauffage et de période de construction à la place de \var{Chauffage} et \var{Annee\_construction}.
 \end{afaire}
 
 \begin{enumerate}
@@ -330,7 +330,7 @@ Les locataires rénovent beaucoup moins que les propriétaires. Pourquoi ? (Qui 
   \item Estimez un modèle Lasso pour une grille de valeurs de $\lambda$. Dans quel ordre les variables sont-elles éliminées quand $\lambda$ augmente ?
   \item Choisissez $\lambda$ par validation croisée 10-fold. Comparez le $\lambda$ qui minimise l'erreur de validation et le plus grand $\lambda$ à moins d'un écart-type de ce minimum (règle « 1-SE »). Quelles variables chaque choix élimine-t-il ?
   \item Divisez l'échantillon en apprentissage et test (80\,\% - 20\,\%) et comparez la RMSE de test des MCO, de Ridge et de Lasso.
-  \item \textbf{Petit échantillon.} Recommencez avec seulement 150 observations d'apprentissage et toutes les interactions d'ordre 2 des variables explicatives, obtenues avec \texttt{PolynomialFeatures(degree=2)}. Comparez à nouveau les RMSE de test. Pourquoi la régularisation change-t-elle si peu de chose dans la question précédente et autant ici ?
+  \item \textbf{Petit échantillon.} Recommencez avec seulement 150 observations tirées de l'échantillon d'apprentissage et tous les carrés et interactions d'ordre 2 des variables explicatives, obtenus avec \texttt{PolynomialFeatures(degree=2)}. Comparez à nouveau les RMSE sur le même échantillon de test. Pourquoi la régularisation change-t-elle si peu de chose dans la question précédente et autant ici ?
 \end{enumerate}
 
 \begin{question}
